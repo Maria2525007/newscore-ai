@@ -1,0 +1,72 @@
+{
+  "schema_version": "1.0",
+  "extraction_tool": "doc2kb@unknown",
+  "created_at": "2026-05-18T14:02:13Z",
+  "corpus_root": "/Volumes/Dev/newscore-ai/raw",
+  "total_documents": 4,
+  "total_tokens_estimated": 12527,
+  "documents": [
+    {
+      "id": "doc-001",
+      "source_path": "NewsCore_AI_Report.docx",
+      "kb_path": "docs/doc-001-newscore-ai-report.md",
+      "sha256": "900027a90d0ee1dcea4ce1dfc3480e2dd26bf06c2051c2b87a318a4d5d6488ee",
+      "source_type": "docx",
+      "extraction_method": "mammoth+markdownify@unknown",
+      "tokens_estimated": 7661,
+      "warnings": [],
+      "inline_images": 0,
+      "has_tables": true,
+      "has_equations": false,
+      "has_tracked_changes": true,
+      "paragraphs": 144,
+      "headings": [],
+      "size_bytes": 48513
+    },
+    {
+      "id": "doc-002",
+      "source_path": "concept.md",
+      "kb_path": "docs/doc-002-concept.md",
+      "sha256": "0753ed2df6bde3a72fa089bdaf459d61ac706a58c4e17674aa66175d4e3c8502",
+      "source_type": "md",
+      "extraction_method": "passthrough-md@unknown",
+      "tokens_estimated": 685,
+      "warnings": [],
+      "source_encoding": "utf-8",
+      "headings": [
+        "NewsCore AI — краткая концепция проекта"
+      ],
+      "size_bytes": 2412
+    },
+    {
+      "id": "doc-003",
+      "source_path": "research.md",
+      "kb_path": "docs/doc-003-research.md",
+      "sha256": "466e6380e5b41f42521657550aec86b037213e7e9a3b34fc916253be51023acc",
+      "source_type": "md",
+      "extraction_method": "passthrough-md@unknown",
+      "tokens_estimated": 2336,
+      "warnings": [],
+      "source_encoding": "utf-8",
+      "headings": [
+        "Исследования: ЦА, рынок, конкуренты"
+      ],
+      "size_bytes": 8127
+    },
+    {
+      "id": "doc-004",
+      "source_path": "Новостной агент | Gamma.pdf",
+      "kb_path": "docs/doc-004-novostnoy-agent-gamma.md",
+      "sha256": "8de89f8d510791fa835500862f379e0a78ced1c0a180862740f3c9a4243f1cd8",
+      "source_type": "pdf",
+      "extraction_method": "pymupdf4llm@unknown",
+      "tokens_estimated": 1845,
+      "warnings": [],
+      "pages": 6,
+      "headings": [],
+      "size_bytes": 3075280
+    }
+  ],
+  "skipped": [],
+  "errors": []
+}
