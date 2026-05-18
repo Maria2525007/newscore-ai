@@ -1,37 +1,38 @@
-# NewsCore AI — startdown
+# NewsCore AI
 
-Репозиторий командного проекта по разработке MVP веб-сервиса **NewsCore AI** — персонализированных дайджестов деловых новостей с AI-суммаризацией для российского рынка.
+Персональный брифинг-агент для предпринимателей и руководителей — веб-сервис с AI-суммаризацией деловых новостей.
 
-## Контекст
+**Партнёры:** Евразийское рейтинговое агентство × ИТМО ФТМИ
+**Статус:** Концепция MVP
 
-- **Партнёры:** Евразийское рейтинговое агентство × ИТМО ФТМИ
-- **Целевой рынок:** Деловые новости РФ (B2C + B2B)
-- **Платформа:** Веб-сервис
-- **Статус:** Концепция MVP
+---
 
 ## Структура репозитория
 
 ```
-startdown/
-├── README.md
-├── raw/                  # Сырые материалы: исследования, заметки, ссылки
-│   ├── research.md       # Анализ ЦА, рынка и конкурентов
-│   └── NewsCore_AI_Report.docx  # Полный технический отчёт
-├── docs/                 # Обработанные документы
-│   └── concept.md        # Краткое видение проекта
-└── .gitignore
+newscore-ai/
+├── backend/            # FastAPI: API, AI-пайплайн, парсинг
+├── frontend/           # Next.js: веб-интерфейс
+├── infra/              # Docker, K8s, CI/CD
+├── docs/               # Финальные документы
+└── research/           # Сырые материалы: исследования, презентации
 ```
 
 ## Быстрый старт
 
 ```bash
-git clone https://github.com/USERNAME/startdown.git
-cd startdown
+git clone https://github.com/USERNAME/newscore-ai.git
+cd newscore-ai
+cp .env.example .env
+docker-compose up
 ```
 
-## Команда
+## Стек
 
-| Участник | Роль |
-|---|---|
-| Maria | Продукт / исследования |
-| Владислав | Техническая реализация |
+| Слой   | Технологии                              |
+| ---------- | ------------------------------------------------- |
+| Frontend   | Next.js, React                                    |
+| Backend    | Python 3.12, FastAPI                              |
+| БД       | PostgreSQL 16, Redis 7, Elasticsearch 8           |
+| AI         | YandexGPT Pro, ruBERT, natasha NER, LightGBM      |
+| Инфра | Kubernetes, Yandex Cloud, GitHub Actions, Grafana |
