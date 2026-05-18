@@ -1,5 +1,5 @@
 ---
-id: doc-004
+id: doc-005
 source: "Новостной агент | Gamma.pdf"
 source_type: pdf
 source_sha256: 8de89f8d510791fa835500862f379e0a78ced1c0a180862740f3c9a4243f1cd8

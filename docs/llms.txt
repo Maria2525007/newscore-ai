@@ -1,12 +1,13 @@
 # Knowledge Base
-> 4 documents, ~12,527 tokens estimated, extracted 2026-05-18 via doc2kb@unknown.
+> 5 documents, ~15,729 tokens estimated, extracted 2026-05-18 via doc2kb@unknown.
 
 ## Word documents
 - [NewsCore_AI_Report.docx](docs/doc-001-newscore-ai-report.md): ~7,661 tokens
 
 ## Markdown
 - [concept.md](docs/doc-002-concept.md): ~685 tokens
-- [research.md](docs/doc-003-research.md): ~2,336 tokens
+- [mvp-brief.md](docs/doc-003-mvp-brief.md): ~3,202 tokens
+- [research.md](docs/doc-004-research.md): ~2,336 tokens
 
 ## PDFs
-- [Новостной агент | Gamma.pdf](docs/doc-004-novostnoy-agent-gamma.md): 6 pages, ~1,845 tokens
+- [Новостной агент | Gamma.pdf](docs/doc-005-novostnoy-agent-gamma.md): 6 pages, ~1,845 tokens

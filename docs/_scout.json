@@ -1,15 +1,15 @@
 {
   "schema_version": "1.0",
   "scout_tool": "doc2kb@unknown",
-  "scanned_at": "2026-05-18T14:00:21Z",
+  "scanned_at": "2026-05-18T16:01:25Z",
   "input_root": "/Volumes/Dev/newscore-ai/raw",
   "kb_root": "/Volumes/Dev/newscore-ai/docs",
   "corpus": {
-    "total_files": 4,
-    "total_size_bytes": 3134332,
-    "estimated_tokens": 9834,
-    "estimated_extraction_seconds": 5,
-    "scout_elapsed_seconds": 0.38
+    "total_files": 5,
+    "total_size_bytes": 3146244,
+    "estimated_tokens": 12812,
+    "estimated_extraction_seconds": 6,
+    "scout_elapsed_seconds": 0.27
   },
   "files": [
     {
@@ -62,6 +62,30 @@
     },
     {
       "id": "doc-003",
+      "source_path": "mvp-brief.md",
+      "size_bytes": 11912,
+      "sha256": "9aea62eb94f700915e900b819bf683aea5af9fc12bac30d8090276cb01d28c96",
+      "mime": "text/plain",
+      "mime_confidence": "low",
+      "source_type": "txt",
+      "warnings": [
+        "mime/extension mismatch (mime=text/plain, ext=.md)"
+      ],
+      "action_required": null,
+      "encoding": "utf_8",
+      "extraction_strategy": "passthrough-txt",
+      "estimated_tokens": 2978,
+      "pages": null,
+      "slides": null,
+      "has_notes": null,
+      "notes_chars": 0,
+      "inline_images": 0,
+      "has_tables": false,
+      "has_equations": false,
+      "pdf_class": null
+    },
+    {
+      "id": "doc-004",
       "source_path": "research.md",
       "size_bytes": 8127,
       "sha256": "466e6380e5b41f42521657550aec86b037213e7e9a3b34fc916253be51023acc",
@@ -85,7 +109,7 @@
       "pdf_class": null
     },
     {
-      "id": "doc-004",
+      "id": "doc-005",
       "source_path": "Новостной агент | Gamma.pdf",
       "size_bytes": 3075280,
       "sha256": "8de89f8d510791fa835500862f379e0a78ced1c0a180862740f3c9a4243f1cd8",

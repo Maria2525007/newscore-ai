@@ -1,10 +1,10 @@
 {
   "schema_version": "1.0",
   "extraction_tool": "doc2kb@unknown",
-  "created_at": "2026-05-18T14:02:13Z",
+  "created_at": "2026-05-18T16:01:50Z",
   "corpus_root": "/Volumes/Dev/newscore-ai/raw",
-  "total_documents": 4,
-  "total_tokens_estimated": 12527,
+  "total_documents": 5,
+  "total_tokens_estimated": 15729,
   "documents": [
     {
       "id": "doc-001",
@@ -40,8 +40,23 @@
     },
     {
       "id": "doc-003",
+      "source_path": "mvp-brief.md",
+      "kb_path": "docs/doc-003-mvp-brief.md",
+      "sha256": "9aea62eb94f700915e900b819bf683aea5af9fc12bac30d8090276cb01d28c96",
+      "source_type": "md",
+      "extraction_method": "passthrough-md@unknown",
+      "tokens_estimated": 3202,
+      "warnings": [],
+      "source_encoding": "utf-8",
+      "headings": [
+        "NewsCore AI — MVP brief"
+      ],
+      "size_bytes": 11912
+    },
+    {
+      "id": "doc-004",
       "source_path": "research.md",
-      "kb_path": "docs/doc-003-research.md",
+      "kb_path": "docs/doc-004-research.md",
       "sha256": "466e6380e5b41f42521657550aec86b037213e7e9a3b34fc916253be51023acc",
       "source_type": "md",
       "extraction_method": "passthrough-md@unknown",
@@ -54,9 +69,9 @@
       "size_bytes": 8127
     },
     {
-      "id": "doc-004",
+      "id": "doc-005",
       "source_path": "Новостной агент | Gamma.pdf",
-      "kb_path": "docs/doc-004-novostnoy-agent-gamma.md",
+      "kb_path": "docs/doc-005-novostnoy-agent-gamma.md",
       "sha256": "8de89f8d510791fa835500862f379e0a78ced1c0a180862740f3c9a4243f1cd8",
       "source_type": "pdf",
       "extraction_method": "pymupdf4llm@unknown",
