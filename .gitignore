@@ -1,0 +1,38 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+.mypy_cache/
+.ruff_cache/
+
+# venv / uv
+.venv/
+venv/
+.uv/
+
+# env
+.env
+.env.local
+*.local.env
+
+# IDE / OS
+.idea/
+.vscode/
+.DS_Store
+
+# project runtime artefacts
+.cache/
+traces/
+backend/tests/qualitative/snapshots/
+backend/tests/qualitative/reports/*.md
+!backend/tests/qualitative/reports/.gitkeep
+
+# build
+dist/
+build/
+*.whl

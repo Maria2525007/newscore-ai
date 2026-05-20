@@ -1,0 +1,138 @@
+"""Оркестратор пайплайна."""
+
+import time
+from dataclasses import dataclass
+from datetime import datetime, timezone
+from typing import Callable, Literal
+
+import structlog
+
+from newscore.config import AppConfig
+from newscore.dedupe import dedupe_by_url
+from newscore.logging import TraceWriter
+from newscore.matcher import Matcher
+from newscore.models import BriefingResult, RunMeta
+from newscore.parser import FeedParser
+from newscore.repository import BriefingRepository
+
+log = structlog.get_logger(__name__)
+
+
+@dataclass
+class BriefingRequest:
+    query: str
+    top_n: int
+    freshness_days: int
+    matcher_name: Literal["embedding", "bm25"]
+    trace: bool
+    run_id: str
+
+
+@dataclass
+class BriefingDeps:
+    parser: FeedParser
+    matcher_factory: Callable[[str], Matcher]
+    repository: BriefingRepository
+    trace_writer: TraceWriter | None
+
+
+class BriefingOrchestrator:
+    def __init__(self, cfg: AppConfig, deps: BriefingDeps) -> None:
+        self.cfg = cfg
+        self.deps = deps
+
+    def run(self, req: BriefingRequest) -> BriefingResult:
+        run_id = req.run_id
+        started = datetime.now(timezone.utc)
+        log.info(
+            "briefing_start",
+            query=req.query,
+            matcher=req.matcher_name,
+            top_n=req.top_n,
+            days=req.freshness_days,
+        )
+
+        # 1. Parse + extract bodies
+        t = time.time()
+        report = self.deps.parser.collect(self.cfg.sources, req.freshness_days)
+        parse_ms = int((time.time() - t) * 1000)
+        if self.deps.trace_writer:
+            self.deps.trace_writer.step(
+                "fetch_and_extract",
+                duration_ms=parse_ms,
+                articles_total=len(report.articles),
+                failed_sources=[fs.name for fs in report.failed_sources],
+                partial=report.partial,
+            )
+
+        # 2. Dedupe by URL
+        unique, removed = dedupe_by_url(report.articles)
+        if self.deps.trace_writer:
+            self.deps.trace_writer.step(
+                "dedupe_url",
+                items_in=len(report.articles),
+                items_out=len(unique),
+                removed=removed,
+            )
+
+        # 3. Match
+        t = time.time()
+        matcher = self.deps.matcher_factory(req.matcher_name)
+        matches = matcher.rank(req.query, unique, req.top_n)
+        match_ms = int((time.time() - t) * 1000)
+        if self.deps.trace_writer:
+            self.deps.trace_writer.step(
+                "match",
+                matcher=matcher.name,
+                matcher_version=matcher.version,
+                duration_ms=match_ms,
+                items_in=len(unique),
+                items_out=len(matches),
+                top_scores=[round(m.score, 4) for m in matches[:10]],
+            )
+
+        # 4. Result
+        finished = datetime.now(timezone.utc)
+        all_failed = bool(report.failed_sources) and not report.articles
+        if all_failed:
+            reason: Literal["ok", "no_relevant_matches", "all_sources_failed"] = (
+                "all_sources_failed"
+            )
+        elif not matches:
+            reason = "no_relevant_matches"
+        else:
+            reason = "ok"
+
+        if unique:
+            sources_snapshot_at = min(a.published_at for a in unique)
+        else:
+            sources_snapshot_at = started
+
+        meta = RunMeta(
+            run_id=run_id,
+            started_at=started,
+            finished_at=finished,
+            matcher_name=matcher.name,
+            matcher_version=matcher.version,
+            sources_snapshot_at=sources_snapshot_at,
+            freshness_days=req.freshness_days,
+            partial=report.partial,
+            failed_sources=report.failed_sources,
+            reason=reason,
+        )
+        result = BriefingResult(query=req.query, items=matches, meta=meta)
+        self.deps.repository.save_run(result)
+
+        if self.deps.trace_writer:
+            self.deps.trace_writer.finalize(result)
+
+        log.info(
+            "briefing_done",
+            run_id=run_id,
+            items=len(matches),
+            duration_ms=int((finished - started).total_seconds() * 1000),
+            partial=report.partial,
+            reason=reason,
+        )
+
+        return result

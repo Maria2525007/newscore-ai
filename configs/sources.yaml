@@ -1,0 +1,31 @@
+# NewsCore AI — sources for Step 0
+# 5 источников зафиксированы в raw/sources-research.md (2026-05-20).
+# Все проверены на доступность из РФ без VPN, свежесть < 3ч.
+
+freshness_days: 7
+top_n: 10
+user_agent: "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+request_timeout_s: 15.0
+
+sources:
+  - name: rbc_main
+    rss_url: https://rssexport.rbc.ru/rbcnews/news/30/full.rss
+    body_extractor: rbc_native        # полный текст в RSS, сеть не нужна
+
+  - name: kommersant
+    rss_url: https://www.kommersant.ru/RSS/news.xml
+    body_extractor: trafilatura
+
+  - name: vedomosti_business
+    rss_url: https://www.vedomosti.ru/rss/rubric/business
+    body_extractor: trafilatura
+    optional: true                    # пейволл: body может быть огрызком
+
+  - name: interfax
+    rss_url: https://www.interfax.ru/rss.asp
+    body_extractor: trafilatura
+
+  - name: forbes_ru
+    rss_url: https://www.forbes.ru/newrss.xml
+    body_extractor: trafilatura
+    optional: true                    # пейволл: body может быть огрызком
