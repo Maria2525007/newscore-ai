@@ -6,7 +6,6 @@ import uuid
 from enum import Enum
 from pathlib import Path
 
-import httpx
 import typer
 
 from newscore.briefing import (
@@ -61,33 +60,25 @@ def briefing(
     configure(level=log_level, fmt=log_format.value, run_id=run_id)
 
     cfg = load_config(config)
-    http = httpx.Client(
-        headers={"User-Agent": cfg.user_agent},
-        follow_redirects=True,
-        timeout=cfg.request_timeout_s,
+    parser = FeedParser(cfg)
+    repo = InMemoryRepository()
+    tw = TraceWriter(run_id=run_id, dir=Path("traces")) if trace else None
+    deps = BriefingDeps(
+        parser=parser,
+        matcher_factory=_matcher_factory,
+        repository=repo,
+        trace_writer=tw,
     )
-    try:
-        parser = FeedParser(cfg, http)
-        repo = InMemoryRepository()
-        tw = TraceWriter(run_id=run_id, dir=Path("traces")) if trace else None
-        deps = BriefingDeps(
-            parser=parser,
-            matcher_factory=_matcher_factory,
-            repository=repo,
-            trace_writer=tw,
-        )
-        orch = BriefingOrchestrator(cfg=cfg, deps=deps)
-        req = BriefingRequest(
-            query=q,
-            top_n=top_n,
-            freshness_days=days,
-            matcher_name=matcher.value,
-            trace=trace,
-            run_id=run_id,
-        )
-        result = orch.run(req)
-    finally:
-        http.close()
+    orch = BriefingOrchestrator(cfg=cfg, deps=deps)
+    req = BriefingRequest(
+        query=q,
+        top_n=top_n,
+        freshness_days=days,
+        matcher_name=matcher.value,
+        trace=trace,
+        run_id=run_id,
+    )
+    result = orch.run(req)
 
     sys.stdout.write(result.model_dump_json(indent=2))
     sys.stdout.write("\n")

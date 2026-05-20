@@ -815,10 +815,69 @@ notes: "минимум 5 из этих 10 должны попасть в top-10 
 
 ---
 
+## 12. Updates v2 (2026-05-20) — Async fetch
+
+После замеров sync-версии (BM25 138s / embedding 236s — оба превысили потолок 2 мин из NFR) параллельный fetch переведён из **Could** в **Must**. Внешние контракты не менялись.
+
+**Замеры на 5 живых RSS:**
+
+| Матчер | Sync | Async | Speedup |
+|---|---|---|---|
+| BM25 | 138s | **22s** | 6.3× |
+| Embedding (e5-base) | 236s | **36s** | 6.5× |
+
+### ADR-12. Hybrid Protocol: sync `BodyExtractor` + async `AsyncBodyExtractor`
+
+- **Контекст.** Sync `BodyExtractor` уже используется в тестах. Полный переход на async ломает тесты + потребовал бы `pytest-asyncio`.
+- **Решение.** Сохраняем sync. Добавляем параллельный `AsyncBodyExtractor`. Каждый extractor реализует оба интерфейса.
+- **Альтернативы.** Только async (ломает тесты); только sync + threads (overhead, нет cancellation).
+- **Последствия.** +~15 строк в каждом extractor. Test infrastructure не меняется.
+
+### ADR-13. Граница async внутри `FeedParser.collect`
+
+- **Контекст.** Контракт `collect(...) -> ParseReport` — sync. Внешние слои (CLI, orchestrator) не должны меняться.
+- **Решение.** `FeedParser.collect` остаётся sync, внутри `asyncio.run(self._acollect(...))`. Один event loop на прогон.
+- **Альтернативы.** Async всю цепочку (ломает orchestrator/CLI); `anyio` (лишняя dep).
+- **Последствия.** +~5 мс на event loop setup, негусто для CLI. Не подходит для FastAPI handler (Step 2) — там переключим контракт на async.
+
+### ADR-14. Двойной лимит concurrency: httpx Limits + per-source Semaphore
+
+- **Контекст.** На Kommersant ~30 фрешных статей. Без лимита — thundering herd, 429/IP-block.
+- **Решение.** `httpx.Limits(max_connections=N_total, max_keepalive_connections=N_total)` + per-source `asyncio.Semaphore(N_per_host)`. Дефолты: 20 / 5.
+- **Альтернативы.** Только глобальный semaphore (один медленный хост заберёт все слоты); только httpx Limits (неявное поведение).
+- **Последствия.** ~10 строк bookkeeping. Параметризуется через `AppConfig.fetch_concurrency_total / fetch_concurrency_per_host`.
+
+### ADR-15. `tenacity.AsyncRetrying` на transient HTTP
+
+- **Контекст.** `tenacity` уже в deps. На параллельной нагрузке транзиенты более вероятны.
+- **Решение.** Обернуть RSS-fetch (не статьи) в `AsyncRetrying` со `stop_after_attempt` + `wait_exponential_jitter`. Retry on: timeout, `ConnectError`, `RemoteProtocolError`, 5xx. **Не retry on 4xx** (включая 429 — это «прекрати», не транзиент).
+- **Альтернативы.** Свой цикл (boilerplate); retry статей (удваивает нагрузку — не оправдано для Step 0).
+- **Последствия.** На 1 transient — ~0.5–4 сек overhead. На 4xx — fail fast.
+
+### ADR-16. AsyncClient lifecycle: `async with` внутри `_acollect`
+
+- **Контекст.** `AsyncClient` — async context manager, требует явного закрытия.
+- **Решение.** `async with httpx.AsyncClient(limits=..., headers=..., timeout=...)` внутри `_acollect`. Закрытие гарантировано на любом exit (включая `CancelledError` на Ctrl+C).
+- **Альтернативы.** Module-level singleton (anti-pattern, проблемы в тестах); создание в CLI (ломает контракт).
+- **Последствия.** Sync `httpx.Client` из CLI больше не используется в hot-path. Аргумент `http=None` в `FeedParser.__init__` оставлен опциональным для обратной совместимости тестов.
+
+### ADR-17. Graceful degradation через `asyncio.gather(return_exceptions=True)`
+
+- **Контекст.** В sync-версии `for src in sources: try/except` — падение источника не валит остальные.
+- **Решение.** Два уровня `gather(*tasks, return_exceptions=True)`: на источниках и на статьях внутри источника. Падение источника → `FailedSource`. Падение статьи → `body=None`, статья остаётся в корпусе.
+- **Альтернативы.** `TaskGroup` (отменяет всех при первом exception); `wait(FIRST_EXCEPTION)` (не подходит).
+- **Последствия.** Совпадает с поведением sync-версии. `CancelledError` пробрасывается через gather и unwinds стек корректно.
+
+### R3 (Risk Register) — статус: ЗАКРЫТ
+
+Изначально: «sequential fetch может превысить 60 сек». После замеров и реализации — async fetch в Must, измеренный потолок 36 сек (embedding) и 22 сек (BM25) — оба в пределах NFR.
+
+---
+
 ## Next Steps
 
 - **RECOMMEND: dba** — не требуется на Step 0. Возвращаемся к нему на Step 1, когда вводим SQLite-репозиторий и схему «темы».
 - **RECOMMEND: security** — не требуется на Step 0 (нет секретов, нет пользователей, нет HTTP).
 - **RECOMMEND: devops** — не требуется на Step 0. README покрывает «git clone → uv sync → запуск». CI можно добавить опционально (`agent-ci` локально), но не блокирует DoD.
-- **ADRs WRITTEN:** 11 (язык, package manager, HTTP-клиент, RSS, body-extraction, embedding runtime, embedding-модель, формат конфига, логирование, CLI-фреймворк, тесты).
+- **ADRs WRITTEN:** 17 (ADR-01..11 в секции 1 — базовый стек; ADR-12..17 в секции 12 — async fetch).
 - **OPEN QUESTIONS:** 4 (см. секцию 11). Все — не блокеры архитектуры, но требуют ответа до старта Story 6.
