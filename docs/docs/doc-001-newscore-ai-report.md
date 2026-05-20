@@ -4,7 +4,7 @@ source: NewsCore_AI_Report.docx
 source_type: docx
 source_sha256: 900027a90d0ee1dcea4ce1dfc3480e2dd26bf06c2051c2b87a318a4d5d6488ee
 extraction_method: mammoth+markdownify@unknown
-extraction_date: 2026-05-18
+extraction_date: 2026-05-20
 paragraphs: 144
 inline_images: 0
 has_tables: true

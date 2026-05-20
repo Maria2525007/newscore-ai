@@ -1,14 +1,25 @@
 ---
-id: doc-005
+id: doc-007
 source: "Новостной агент | Gamma.pdf"
 source_type: pdf
 source_sha256: 8de89f8d510791fa835500862f379e0a78ced1c0a180862740f3c9a4243f1cd8
 extraction_method: pymupdf4llm@unknown
-extraction_date: 2026-05-18
+extraction_date: 2026-05-20
 pages: 6
-headings: []
-tokens_estimated: 1845
+headings:
+  - "Новостной агент"
+  - "Проблема"
+  - "Кто пользователь"
+  - "Боль"
+  - "Как сейчас эту задачу решают"
+  - "Гипотеза решения"
+  - "Конкурентный ландшафт"
+  - MVP
+  - "Что делаем"
+  - "Что сознательно не делаем"
+tokens_estimated: 2313
 warnings: []
+assets: [../assets/doc-007-page01-img1.png, ../assets/doc-007-page01-img2.png, ../assets/doc-007-page01-img3.png, ../assets/doc-007-page01-img6.png, ../assets/doc-007-page02-img1.png, ../assets/doc-007-page04-img3.png]
 ---
 [page 1]
 
@@ -30,11 +41,25 @@ warnings: []
 
 Не подтверждено: масштаб боли, сегменты, желание платить
 
+#### Additional embedded images on page 1
+
+![page 1, image 1 (additional)](../assets/doc-007-page01-img1.png)
+
+![page 1, image 2 (additional)](../assets/doc-007-page01-img2.png)
+
+![page 1, image 3 (additional)](../assets/doc-007-page01-img3.png)
+
+![page 1, image 4 (additional)](../assets/doc-007-page01-img1.png)
+
+![page 1, image 5 (additional)](../assets/doc-007-page01-img2.png)
+
+![page 1, image 6 (additional)](../assets/doc-007-page01-img6.png)
+
 [page 2]
 
 ## Как сейчас эту задачу решают
 
-**==> picture [507 x 158] intentionally omitted <==**
+**![page 2, image 1](../assets/doc-007-page02-img1.png)**
 
 **----- Start of picture text -----**<br>
 Способ Примеры Плюсы Минусы<br>Вручную Telegram-каналы, Новостные Привычно · Быстро · Дёшево Человек сам фильтрует<br>ленты и агрегаторы, Ручные поток; Шум остаётся; Узкие<br>запросы в ChatGPT темы неудобно отслеживать<br>Лёгкая автоматизация Telegram-боты, Digest- Меньше ручной работы ·  Ручная настройка<br>сервисы, Junction Bot Удобная доставка источников; Ограничены по<br>глубине; Не решают topic-<br>first briefing<br>Тяжёлый мониторинг Медиалогия, СКАН Широкий охват · Аналитика ·  Дорогие; Избыточны для<br>Уведомления одного; Корпоративный<br>сценарий<br>**----- End of picture text -----**<br>
@@ -47,11 +72,19 @@ warnings: []
 
 Агент **в фоне** собирает Пользователь получает информацию регулярный **брифинг**
 
+#### Additional embedded images on page 2
+
+![page 2, image 2 (additional)](../assets/doc-007-page01-img1.png)
+
+![page 2, image 3 (additional)](../assets/doc-007-page01-img1.png)
+
+![page 2, image 4 (additional)](../assets/doc-007-page01-img2.png)
+
 [page 3]
 
 ## Конкурентный ландшафт
 
-**==> picture [507 x 210] intentionally omitted <==**
+**![page 3, image 1](../assets/doc-007-page02-img1.png)**
 
 **----- Start of picture text -----**<br>
 Решение Класс Для кого Как задаётся Фоновый Ценовой Для России<br>интерес мониторинг класс<br>Медиалогия Глубокий PR, коммуникации,  Контексты,  Да Высокий : от Да<br>мониторинг топ-менеджмент параметры,  50 000 ₽/мес.<br>объекты<br>Agentic News Персональный Руководители и Естественный Да Низкий: $9/ Нет<br>агент предприниматели язык мес.<br>Junction Bot Персональный Пользователи Выбор чатов/ Да Низкий:  Частично<br>агент в Telegram Telegram источников €12.60/мес.<br>Telegram Ручное решение Любой Вручную Нет Нулевой или Частично<br>ChatGPT пользователь очень низкий<br>ленты<br>Новостной Персональный Руководители и Естественный Да Низкий Да<br>агент агент предприниматели язык<br>**----- End of picture text -----**<br>
@@ -82,11 +115,19 @@ warnings: []
 
 Ключевой вопрос MVP: сможет ли агент давать достаточно релевантный брифинг, чтобы пользователь не возвращался к ручному чтению?
 
+#### Additional embedded images on page 3
+
+![page 3, image 2 (additional)](../assets/doc-007-page01-img1.png)
+
+![page 3, image 3 (additional)](../assets/doc-007-page01-img1.png)
+
+![page 3, image 4 (additional)](../assets/doc-007-page01-img2.png)
+
 [page 4]
 
 ## Монетизация
 
-**==> picture [294 x 53] intentionally omitted <==**
+**![page 4, image 1](../assets/doc-007-page01-img1.png)**
 
 **----- Start of picture text -----**<br>
 Free Pro — 790 ₽/мес<br>1 тема Несколько тем<br>**----- End of picture text -----**<br>
@@ -105,16 +146,30 @@ Free Pro — 790 ₽/мес<br>1 тема Несколько тем<br>**----- E
 
 Риски
 
-**==> picture [507 x 208] intentionally omitted <==**
+**![page 4, image 2](../assets/doc-007-page01-img2.png)**
 
 **----- Start of picture text -----**<br>
 6,4 млн субъектов МСП в 1,5 млн пользователей Экономический<br>РФ МСП.РФ<br>Ниша может оказаться слишком узкой для B2C<br>Это не наш рынок, а только верхняя граница<br>Юридический<br>Что неизвестно Неясна устойчивость и допустимость использования<br>внешних источников<br>Массовость боли<br>Готовность платить лично<br>Удержание Технический<br>Качество релевантности может быть недостаточным<br>Реальный рынок определяется не размером МСП, а болью, оплатой и удержанием<br>**----- End of picture text -----**<br>
+
+#### Additional embedded images on page 4
+
+![page 4, image 3 (additional)](../assets/doc-007-page04-img3.png)
+
+![page 4, image 4 (additional)](../assets/doc-007-page02-img1.png)
+
+![page 4, image 5 (additional)](../assets/doc-007-page01-img1.png)
 
 [page 5]
 
 ## Спасибо
 
 Новостной агент — персональный брифинг без лишнего шума
+
+#### Additional embedded images on page 5
+
+![page 5, image 1 (additional)](../assets/doc-007-page01-img1.png)
+
+![page 5, image 2 (additional)](../assets/doc-007-page01-img2.png)
 
 [page 6]
 

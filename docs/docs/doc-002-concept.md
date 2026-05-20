@@ -4,7 +4,7 @@ source: concept.md
 source_type: md
 source_sha256: 0753ed2df6bde3a72fa089bdaf459d61ac706a58c4e17674aa66175d4e3c8502
 extraction_method: passthrough-md@unknown
-extraction_date: 2026-05-18
+extraction_date: 2026-05-20
 source_encoding: utf-8
 headings: ["NewsCore AI — краткая концепция проекта"]
 tokens_estimated: 685

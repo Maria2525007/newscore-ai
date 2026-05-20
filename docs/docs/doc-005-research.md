@@ -1,10 +1,10 @@
 ---
-id: doc-004
+id: doc-005
 source: research.md
 source_type: md
 source_sha256: 466e6380e5b41f42521657550aec86b037213e7e9a3b34fc916253be51023acc
 extraction_method: passthrough-md@unknown
-extraction_date: 2026-05-18
+extraction_date: 2026-05-20
 source_encoding: utf-8
 headings: ["Исследования: ЦА, рынок, конкуренты"]
 tokens_estimated: 2336
