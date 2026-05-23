@@ -1,0 +1,16 @@
+query_id: q04
+query: "IT-импортозамещение"
+prepared_by: "Claude (initial Step 0 baseline)"
+prepared_at: "2026-05-23"
+corpus_snapshot: "sample-30d"
+expected_top10_urls:
+  - https://www.vedomosti.ru/business/articles/2026/05/13/1196833-v-rossii-sozdali-sobstvennuyu-platformu-identifikatsii-bespilotnikov  # своя платформа идентификации БПЛА
+  - https://www.vedomosti.ru/business/news/2026/05/04/1195027-minpromtorg-otsenil-effekt  # Минпромторг: исключение ПК из параллельного импорта
+  - https://www.kommersant.ru/doc/8674908    # МегаФон + российское ПО для частных сетей
+  - https://www.vedomosti.ru/business/news/2026/05/18/1198023-samoleti-s-ii  # ОАК + ИИ от Сбера (отечественный AI)
+notes: |
+  В корпусе мало прямых материалов про IT-импортозамещение. Включены случаи,
+  где явный фокус на отечественной разработке/замене импортных IT-продуктов.
+  Borderline (не включаю):
+  - "В НАТО заявили об отсутствии альтернатив технологиям Palantir" — это про их зависимость, не наше impзamещ
+  - "Минпромторг + НДС 22% на интернет-заказы" — это про taxation, не IT-импортозамещение

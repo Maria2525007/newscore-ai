@@ -1,0 +1,14 @@
+query_id: q01
+query: "курс валют"
+prepared_by: "Claude (initial Step 0 baseline)"
+prepared_at: "2026-05-23"
+corpus_snapshot: "sample-30d"
+expected_top10_urls:
+  - https://www.vedomosti.ru/opinion/columns/2026/05/06/1195404-kurs-na-rupiyu
+notes: |
+  В корпусе из 679 статей за 30 дней практически нет материалов про обменные курсы валют.
+  Единственная релевантная статья — "Курс на рупию" (Ведомости).
+  Это reflects реальное состояние RSS-фидов на момент snapshot'а — за период не было
+  значимых движений курса USD/EUR/CNY.
+  Borderline (не включаю): "Минфин разместит 10-летние ОФЗ в юанях" — про размещение
+  ОФЗ, валютный аспект косвенный.

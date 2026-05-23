@@ -1,0 +1,21 @@
+query_id: q03
+query: "санкции против РФ"
+prepared_by: "Claude (initial Step 0 baseline)"
+prepared_at: "2026-05-23"
+corpus_snapshot: "sample-30d"
+expected_top10_urls:
+  - https://www.kommersant.ru/doc/8688080     # Швейцария + 20-й пакет санкций ЕС против России
+  - https://www.vedomosti.ru/business/news/2026/05/19/1198449-velikobritaniya-razreshila  # Великобритания + российская нефть
+  - https://www.vedomosti.ru/business/news/2026/05/20/1198668-novak-rossiiskoi-nefti  # Новак: санкции отменяют без РФ нефти
+  - https://www.vedomosti.ru/business/news/2026/05/18/1198164-ssha-prodlili-litsenziyu  # США продлили лицензию на российскую нефть
+  - https://www.kommersant.ru/doc/8674424     # Захарова: операции с замороженными активами
+  - https://www.kommersant.ru/doc/8675305     # Минтранс: иностранным судам флаг РФ (обход санкций)
+  - https://www.kommersant.ru/doc/8687860     # США защита от санкционных судов
+  - https://www.kommersant.ru/doc/8674144     # МИД: покупатели минералов в условиях санкций
+  - https://www.kommersant.ru/doc/8688643     # Лавров: Запад через Армению давит на РФ
+  - https://www.vedomosti.ru/business/news/2026/05/21/1198978-sud-kazahstane  # Казахстан, Нафтогаз vs Газпром
+  - https://www.kommersant.ru/doc/8675049     # Bloomberg: ЕС снять санкции с китайских чипов (косвенно — санкционная политика)
+notes: |
+  Самая богатая тема в корпусе — 22 матча по "санкци".
+  Включены: прямые санкции против РФ, обходные меры, ответы на санкции, санкционные исключения.
+  Исключены: санкции против Ирана/Кубы/Беларуси (без российского контекста).

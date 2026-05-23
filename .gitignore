@@ -31,6 +31,7 @@ traces/
 backend/tests/qualitative/snapshots/
 backend/tests/qualitative/reports/*.md
 !backend/tests/qualitative/reports/.gitkeep
+!backend/tests/qualitative/reports/baseline_*.md
 
 # build
 dist/

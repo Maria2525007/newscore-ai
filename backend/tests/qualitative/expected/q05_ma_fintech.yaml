@@ -1,0 +1,13 @@
+query_id: q05
+query: "сделки M&A в финтехе"
+prepared_by: "Claude (initial Step 0 baseline)"
+prepared_at: "2026-05-23"
+corpus_snapshot: "sample-30d"
+expected_top10_urls:
+  - https://www.vedomosti.ru/business/articles/2026/05/12/1196549-riteiler-mvideo-izbavilsya-ot-operatora-pos-kreditovaniya  # M.видео продал POS-кредитование
+notes: |
+  Узкая тема. В корпусе только одна сделка с финтех-аспектом —
+  «М.видео» избавился от оператора POS-кредитования (продажа финансового подразделения).
+  Остальные M&A-сделки в корпусе (Paramount-Warner, Estee Lauder-Puig, Аэрофлот IPO,
+  активы Ахметова, и т.д.) — не финтех.
+  precision@10 здесь имеет потолок 0.10 — known limitation, см. eval report.

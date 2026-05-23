@@ -1,0 +1,12 @@
+query_id: q06
+query: "новости про автоваз"
+prepared_by: "Claude (initial Step 0 baseline)"
+prepared_at: "2026-05-23"
+corpus_snapshot: "sample-30d"
+expected_top10_urls:
+  - https://www.vedomosti.ru/business/news/2026/05/04/1194959-avtovaz-otpravil-v-otpusk  # АвтоВАЗ корпоративный отпуск
+  - https://www.vedomosti.ru/business/news/2026/05/21/1199016-tolyatti-generatorov-dlya-lada  # Тольятти: серийное производство генераторов для Lada
+notes: |
+  В корпусе только 2 материала про АвтоВАЗ/Lada/Тольятти-завод. Все остальные
+  упоминания "Lada" в корпусе — про спортивные награды и не относятся к компании.
+  precision@10 потолок = 0.20.
