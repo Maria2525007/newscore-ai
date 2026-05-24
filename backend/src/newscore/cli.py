@@ -1,4 +1,11 @@
-"""typer-приложение, entry point."""
+"""typer-приложение, entry point.
+
+Многокомандный layout (Step 1+):
+- `newscore briefing "query"` — Step 0 brief one-shot
+- `newscore "query"`          — backward-compat alias к `briefing`
+- `newscore theme ...`        — управление темами (Step 1)
+- `newscore daemon`           — фоновый scheduler (Step 1)
+"""
 
 import json
 import sys
@@ -18,6 +25,7 @@ from newscore.logging import TraceWriter, configure
 from newscore.matcher import Bm25Matcher, EmbeddingMatcher, Matcher
 from newscore.parser import FeedParser
 from newscore.repository import InMemoryRepository
+from newscore.themes.cli import daemon_cmd, theme_app
 
 
 class MatcherChoice(str, Enum):
@@ -38,6 +46,15 @@ def _matcher_factory(name: str) -> Matcher:
     raise ValueError(f"unknown matcher: {name}")
 
 
+app = typer.Typer(
+    help="NewsCore AI — briefing-first новостной агент.",
+    no_args_is_help=True,
+)
+app.add_typer(theme_app, name="theme")
+app.command("daemon", help="Запустить фоновый scheduler (Step 1).")(daemon_cmd)
+
+
+@app.command("briefing")
 def briefing(
     query: str = typer.Argument(..., help="NL-запрос пользователя"),
     matcher: MatcherChoice = typer.Option(MatcherChoice.embedding, "--matcher"),
@@ -50,7 +67,7 @@ def briefing(
         Path("configs/sources.yaml"), "--config", "-c", exists=True
     ),
 ) -> None:
-    """Собрать брифинг по NL-запросу."""
+    """Собрать брифинг по NL-запросу (Step 0 core)."""
     q = query.strip()
     if not q:
         print(json.dumps({"error": "query is empty"}, ensure_ascii=False))
@@ -88,8 +105,24 @@ def briefing(
         raise typer.Exit(code=1)
 
 
+_SUBCOMMANDS = {"briefing", "theme", "daemon"}
+
+
 def main() -> None:
-    typer.run(briefing)
+    """Entry point с backward-compat роутингом.
+
+    `newscore "query"` без подкоманды → перенаправляем на `newscore briefing "query"`,
+    чтобы README/команда Step 0 продолжали работать.
+    """
+    if len(sys.argv) >= 2:
+        first = sys.argv[1]
+        if (
+            first not in _SUBCOMMANDS
+            and not first.startswith("-")
+            and first not in {"--help", "-h"}
+        ):
+            sys.argv.insert(1, "briefing")
+    app()
 
 
 if __name__ == "__main__":

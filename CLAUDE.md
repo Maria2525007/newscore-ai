@@ -25,7 +25,7 @@ NewsCore AI — briefing-first новостной агент. Учебный п�
 
 ## Дедлайны
 
-- **29.05.2026, 17:30 — защита** (офлайн, Кронверкский, ИТМО ФТМИ). За 6 дней. Это главный текущий дедлайн.
+- **29.05.2026, 17:30 — защита** (офлайн, Кронверкский, ИТМО ФТМИ). Главный текущий дедлайн.
 
 ---
 
@@ -34,10 +34,11 @@ NewsCore AI — briefing-first новостной агент. Учебный п�
 | # | Решение | Источник |
 |---|---|---|
 | Step 0 closed | Принято командой 2026-05-23 по обновлённому DoD | `raw/step0-qual-baseline.md` §9 |
-| DoD = cap_precision | precision @ min(K, \|expected\|) ≥ 0.5 на ≥4 из 6 непустых запросов. Не precision@10 — слишком строгая для узких эталонов. | `raw/step0-spec.md` §9 |
+| DoD Step 0 = cap_precision | precision @ min(K, \|expected\|) ≥ 0.5 на ≥4 из 6 непустых запросов. Не precision@10 — слишком строгая для узких эталонов. | `raw/step0-spec.md` §9 |
 | Embedding-матчер = default | `intfloat/multilingual-e5-base`, локально. 2× cap_precision vs BM25. | `raw/step0-architecture.md` ADR-07 |
 | BM25 = Should baseline | для side-by-side сравнения, не primary | `raw/step0-spec.md` MoSCoW |
-| Step 1 (briefing-first) — после защиты | Не стартует до 29.05 + фидбека защиты | командное решение |
+| **Step 1→2→3 — в работе (2026-05-24)** | Пользователь отменил «стоп до защиты». Идём Step 1 (briefing-first) → Step 2 (web) → Step 3 (summary) автономно. | пользователь 2026-05-24 |
+| **Доставка = браузер** | Step 2 = веб-страница (FastAPI + Jinja2). НЕ Telegram-бот, НЕ email. | пользователь 2026-05-24 |
 
 ---
 
@@ -83,18 +84,24 @@ uv run python backend/tests/qualitative/eval.py score --id sample-30d  # про�
 
 ---
 
-## Что НЕ делать на Step 0
+## Текущий scope (Step 1→2→3 в работе)
 
-- **НЕ** добавлять FastAPI / HTTP-эндпоинты — это Step 2.
-- **НЕ** добавлять PostgreSQL / SQLite — это Step 1+.
-- **НЕ** добавлять Docker prod / K8s / CI/CD — это Step 5.
-- **НЕ** добавлять суммаризацию, NER, классификацию — это Step 3.
-- **НЕ** добавлять авто-обновление тем, расписание, scheduler — это Step 1.
-- **НЕ** удалять `frontend/`, `infra/` — заглушки для Step 2/5.
-- **НЕ** реализовывать `dedupe_by_title_url_hash` и `FileCache.get/put` — оставлены как `NotImplementedError`, это **Should**, не Must (см. spec §4 + §9).
-- **НЕ** стартовать Step 1 код до защиты 29.05.
+**В скоупе сейчас:**
+- **Step 1 — briefing-first:** SQLite (single-file `data/newscore.db`) + темы + scheduler + дельтинг
+- **Step 2 — web delivery:** FastAPI + Jinja2 templates, минимальный CSS, без auth, без SPA
+- **Step 3 — summary:** extractive через embeddings (без LLM API), 2-4 предложения на статью
 
-Если фича пахнет ROADMAP — отказать, сослаться на `raw/roadmap.md`.
+**Step 0 заморожен:** код стабилен, qual-eval baseline зафиксирован. Не трогаем без причины.
+
+**Не в скоупе:**
+- **НЕ** Docker prod / K8s / CI/CD — это Step 5.
+- **НЕ** массовое масштабирование источников / web-краулинг — это Step 4.
+- **НЕ** Telegram-бот / email — доставка только через браузер (решение 2026-05-24).
+- **НЕ** платный LLM API для summary — только локальная extractive через e5-base.
+- **НЕ** реализовывать `dedupe_by_title_url_hash` и `FileCache.get/put` — оставлены как `NotImplementedError`, это **Should** (см. spec §4 + §9).
+- **НЕ** удалять `frontend/`, `infra/` — заглушки для будущих шагов.
+
+Если фича пахнет Step 4-5 — отказать, сослаться на `raw/roadmap.md`.
 
 ---
 

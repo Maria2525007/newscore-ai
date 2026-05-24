@@ -18,7 +18,7 @@ from newscore.models import BriefingResult
 def configure(
     level: str,
     fmt: Literal["console", "json"],
-    run_id: str,
+    run_id: str | None = None,
 ) -> None:
     lvl = getattr(stdlib_logging, level.upper(), stdlib_logging.INFO)
 
@@ -47,7 +47,8 @@ def configure(
     )
 
     structlog.contextvars.clear_contextvars()
-    structlog.contextvars.bind_contextvars(run_id=run_id)
+    if run_id is not None:
+        structlog.contextvars.bind_contextvars(run_id=run_id)
 
 
 class TraceWriter:
