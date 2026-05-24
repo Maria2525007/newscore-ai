@@ -58,9 +58,9 @@ class EmbeddingMatcher:
 
     def _ensure_model(self):
         if self._model is None:
-            from sentence_transformers import SentenceTransformer
+            from newscore.embeddings import get_st_model
 
-            self._model = SentenceTransformer(self.model_name)
+            self._model = get_st_model(self.model_name)
         return self._model
 
     def rank(

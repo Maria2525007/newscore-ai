@@ -18,7 +18,7 @@ class RawArticle(BaseModel):
 
 
 class EnrichedArticle(BaseModel):
-    """RawArticle + извлечённое тело."""
+    """RawArticle + извлечённое тело (+ опциональный summary из Step 3)."""
 
     source: str
     title: str
@@ -28,6 +28,7 @@ class EnrichedArticle(BaseModel):
     body: str | None
     body_extracted: bool
     body_extractor: str
+    summary: str | None = None
 
 
 class Match(BaseModel):

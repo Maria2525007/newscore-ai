@@ -58,8 +58,8 @@
         score {{ "%.3f"|format(a.last_score) }} ·
         {{ art.published_at[:16].replace("T", " ") }}
       </div>
-      {% if a.payload.summary %}
-        <p class="summary">{{ a.payload.summary }}</p>
+      {% if art.summary %}
+        <p class="summary">{{ art.summary }}</p>
       {% elif art.snippet %}
         <p class="snippet">{{ art.snippet }}</p>
       {% endif %}

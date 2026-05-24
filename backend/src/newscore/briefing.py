@@ -14,6 +14,7 @@ from newscore.matcher import Matcher
 from newscore.models import BriefingResult, RunMeta
 from newscore.parser import FeedParser
 from newscore.repository import BriefingRepository
+from newscore.summarizer import Summarizer
 
 log = structlog.get_logger(__name__)
 
@@ -34,6 +35,7 @@ class BriefingDeps:
     matcher_factory: Callable[[str], Matcher]
     repository: BriefingRepository
     trace_writer: TraceWriter | None
+    summarizer: Summarizer | None = None
 
 
 class BriefingOrchestrator:
@@ -90,6 +92,31 @@ class BriefingOrchestrator:
                 items_out=len(matches),
                 top_scores=[round(m.score, 4) for m in matches[:10]],
             )
+
+        # 3b. Summarize (Step 3, optional)
+        if self.deps.summarizer is not None and matches:
+            t = time.time()
+            for m in matches:
+                try:
+                    m.article.summary = self.deps.summarizer.summarize(
+                        req.query, m.article
+                    )
+                except Exception as exc:  # noqa: BLE001
+                    log.warning(
+                        "summarize_failed",
+                        url=str(m.article.url),
+                        err=str(exc),
+                    )
+                    m.article.summary = None
+            summarize_ms = int((time.time() - t) * 1000)
+            if self.deps.trace_writer:
+                self.deps.trace_writer.step(
+                    "summarize",
+                    summarizer=self.deps.summarizer.name,
+                    summarizer_version=self.deps.summarizer.version,
+                    duration_ms=summarize_ms,
+                    items=len(matches),
+                )
 
         # 4. Result
         finished = datetime.now(timezone.utc)

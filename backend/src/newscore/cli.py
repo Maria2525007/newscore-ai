@@ -25,6 +25,7 @@ from newscore.logging import TraceWriter, configure
 from newscore.matcher import Bm25Matcher, EmbeddingMatcher, Matcher
 from newscore.parser import FeedParser
 from newscore.repository import InMemoryRepository
+from newscore.summarizer import ExtractiveSummarizer
 from newscore.themes.cli import _build_service, daemon_cmd, theme_app
 from newscore.themes.db import DEFAULT_DB_PATH
 
@@ -83,6 +84,7 @@ def briefing(
     top_n: int = typer.Option(10, "--top-n"),
     days: int = typer.Option(7, "--days"),
     trace: bool = typer.Option(False, "--trace"),
+    summary: bool = typer.Option(True, "--summary/--no-summary"),
     log_format: LogFormat = typer.Option(LogFormat.console, "--log-format"),
     log_level: str = typer.Option("INFO", "--log-level"),
     config: Path = typer.Option(
@@ -107,6 +109,7 @@ def briefing(
         matcher_factory=_matcher_factory,
         repository=repo,
         trace_writer=tw,
+        summarizer=ExtractiveSummarizer() if summary else None,
     )
     orch = BriefingOrchestrator(cfg=cfg, deps=deps)
     req = BriefingRequest(

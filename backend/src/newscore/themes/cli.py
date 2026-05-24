@@ -17,6 +17,7 @@ from newscore.logging import configure
 from newscore.matcher import Bm25Matcher, EmbeddingMatcher, Matcher
 from newscore.parser import FeedParser
 from newscore.repository import InMemoryRepository
+from newscore.summarizer import ExtractiveSummarizer
 from newscore.themes.db import DEFAULT_DB_PATH, connect
 from newscore.themes.models import MatcherName
 from newscore.themes.scheduler import AsyncScheduler
@@ -61,6 +62,8 @@ def _build_service(
                 raise ValueError(f"unknown matcher: {name}")
         return matchers[name]
 
+    summarizer = ExtractiveSummarizer()
+
     def _orch_factory() -> BriefingOrchestrator:
         cfg = load_config(config_path)
         deps = BriefingDeps(
@@ -68,6 +71,7 @@ def _build_service(
             matcher_factory=_matcher_factory,
             repository=InMemoryRepository(),
             trace_writer=None,
+            summarizer=summarizer,
         )
         return BriefingOrchestrator(cfg=cfg, deps=deps)
 
