@@ -1,0 +1,92 @@
+{% extends "base.html" %}
+{% block title %}{{ theme.query }} — NewsCore AI{% endblock %}
+{% block content %}
+<header class="theme-header">
+  <h1>{{ theme.query }}</h1>
+  <div class="meta">
+    <code>{{ theme.id }}</code> ·
+    матчер <code>{{ theme.matcher }}</code> ·
+    период {{ (theme.period_seconds // 60) }}м ·
+    статус <span class="status status-{{ theme.status }}">{{ theme.status }}</span>
+  </div>
+  <div class="actions">
+    <form action="/themes/{{ theme.id }}/run" method="post" style="display:inline">
+      <button type="submit">Запустить сейчас</button>
+    </form>
+    {% if theme.status == "active" %}
+      <form action="/themes/{{ theme.id }}/pause" method="post" style="display:inline">
+        <button type="submit">Пауза</button>
+      </form>
+    {% else %}
+      <form action="/themes/{{ theme.id }}/resume" method="post" style="display:inline">
+        <button type="submit">Активировать</button>
+      </form>
+    {% endif %}
+    <form action="/themes/{{ theme.id }}/delete" method="post"
+          style="display:inline"
+          onsubmit="return confirm('Удалить тему?')">
+      <button type="submit" class="danger">Удалить</button>
+    </form>
+  </div>
+</header>
+
+<section>
+  <h2>Последний запуск</h2>
+  {% if latest %}
+    <p class="run-meta">
+      <strong>{{ latest.started_at.strftime("%Y-%m-%d %H:%M UTC") }}</strong>,
+      {{ latest.items_total }} статей ({{ latest.items_new }} новых),
+      матчер {{ latest.matcher_name }}
+      {%- if latest.partial %} · <span class="warn">partial</span>{% endif -%}
+      {%- if latest.reason and latest.reason != "ok" %} · {{ latest.reason }}{% endif -%}.
+    </p>
+  {% else %}
+    <p class="empty">Ещё не запускалась — нажмите «Запустить сейчас» или дождитесь daemon.</p>
+  {% endif %}
+</section>
+
+{% if articles %}
+<section>
+  <h2>Статьи ({{ articles|length }})</h2>
+  <ol class="articles">
+    {% for a in articles %}
+    {% set art = a.payload.article %}
+    <li>
+      <a href="{{ art.url }}" target="_blank" rel="noopener">{{ art.title }}</a>
+      <div class="article-meta">
+        <code>{{ art.source }}</code> ·
+        score {{ "%.3f"|format(a.last_score) }} ·
+        {{ art.published_at[:16].replace("T", " ") }}
+      </div>
+      {% if a.payload.summary %}
+        <p class="summary">{{ a.payload.summary }}</p>
+      {% elif art.snippet %}
+        <p class="snippet">{{ art.snippet }}</p>
+      {% endif %}
+    </li>
+    {% endfor %}
+  </ol>
+</section>
+{% endif %}
+
+{% if runs|length > 1 %}
+<section>
+  <h2>История запусков</h2>
+  <table class="runs">
+    <thead>
+      <tr><th>Когда</th><th>Всего</th><th>Новых</th><th>Reason</th></tr>
+    </thead>
+    <tbody>
+      {% for r in runs %}
+      <tr>
+        <td>{{ r.started_at.strftime("%Y-%m-%d %H:%M") }}</td>
+        <td>{{ r.items_total }}</td>
+        <td>{{ r.items_new }}</td>
+        <td>{{ r.reason or "—" }}{% if r.partial %} <span class="warn">partial</span>{% endif %}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</section>
+{% endif %}
+{% endblock %}

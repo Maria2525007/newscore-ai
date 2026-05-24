@@ -1,0 +1,162 @@
+:root {
+  --bg: #faf9f6;
+  --fg: #1a1a1a;
+  --muted: #666;
+  --line: #e3e1dc;
+  --accent: #0a5d8c;
+  --warn: #c47d00;
+  --danger: #b3261e;
+  --code-bg: #f0eee8;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+    "Helvetica Neue", Arial, sans-serif;
+  background: var(--bg);
+  color: var(--fg);
+  line-height: 1.5;
+}
+
+header {
+  border-bottom: 1px solid var(--line);
+  padding: 0.75rem 1.5rem;
+  display: flex;
+  align-items: center;
+  gap: 2rem;
+  background: white;
+}
+
+header .logo {
+  font-weight: 700;
+  font-size: 1.1rem;
+  text-decoration: none;
+  color: var(--fg);
+}
+
+header nav a {
+  color: var(--accent);
+  text-decoration: none;
+}
+
+main {
+  max-width: 900px;
+  margin: 1.5rem auto;
+  padding: 0 1.5rem;
+}
+
+footer {
+  text-align: center;
+  color: var(--muted);
+  padding: 2rem 1rem;
+  font-size: 0.85rem;
+}
+
+h1 { font-size: 1.6rem; margin: 0 0 1rem; }
+h2 { font-size: 1.15rem; margin: 1.5rem 0 0.75rem; }
+
+a { color: var(--accent); }
+
+code {
+  background: var(--code-bg);
+  padding: 0.05rem 0.35rem;
+  border-radius: 3px;
+  font-size: 0.9em;
+}
+
+.empty { color: var(--muted); font-style: italic; }
+
+/* Themes table */
+table.themes, table.runs {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 0.5rem;
+}
+table.themes th, table.themes td,
+table.runs th, table.runs td {
+  text-align: left;
+  padding: 0.5rem 0.75rem;
+  border-bottom: 1px solid var(--line);
+  vertical-align: top;
+}
+table.themes th, table.runs th {
+  font-weight: 600;
+  color: var(--muted);
+  font-size: 0.85rem;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.status {
+  font-size: 0.8rem;
+  padding: 0.1rem 0.5rem;
+  border-radius: 10px;
+  background: var(--code-bg);
+  color: var(--muted);
+}
+.status-active { background: #e0efe4; color: #2c6b3c; }
+.status-paused { background: #f3eee1; color: #7c5d00; }
+
+.warn { color: var(--warn); }
+
+/* Theme detail */
+.theme-header .meta { color: var(--muted); margin: 0.25rem 0 1rem; }
+.theme-header .actions { display: flex; gap: 0.5rem; flex-wrap: wrap; }
+
+button {
+  font: inherit;
+  padding: 0.4rem 0.9rem;
+  border: 1px solid var(--line);
+  background: white;
+  border-radius: 4px;
+  cursor: pointer;
+}
+button:hover { background: var(--code-bg); }
+button.danger { color: var(--danger); border-color: var(--danger); }
+
+.run-meta { color: var(--muted); }
+
+ol.articles { list-style: decimal; padding-left: 1.5rem; }
+ol.articles li { margin-bottom: 1rem; }
+ol.articles a { font-weight: 500; }
+.article-meta { color: var(--muted); font-size: 0.85rem; margin-top: 0.15rem; }
+.snippet, .summary {
+  margin: 0.35rem 0 0;
+  font-size: 0.93rem;
+  color: #333;
+}
+.summary { font-style: italic; }
+
+/* Forms */
+form.theme-form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+  max-width: 500px;
+  margin-top: 1rem;
+}
+form.theme-form label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  font-weight: 500;
+  font-size: 0.95rem;
+}
+form.theme-form input,
+form.theme-form select {
+  font: inherit;
+  padding: 0.5rem;
+  border: 1px solid var(--line);
+  border-radius: 4px;
+}
+form.theme-form small { color: var(--muted); font-weight: normal; }
+form.theme-form button {
+  align-self: flex-start;
+  background: var(--accent);
+  color: white;
+  border: none;
+  padding: 0.55rem 1.5rem;
+}
+form.theme-form button:hover { background: #0c4a73; }

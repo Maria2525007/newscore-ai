@@ -25,7 +25,8 @@ from newscore.logging import TraceWriter, configure
 from newscore.matcher import Bm25Matcher, EmbeddingMatcher, Matcher
 from newscore.parser import FeedParser
 from newscore.repository import InMemoryRepository
-from newscore.themes.cli import daemon_cmd, theme_app
+from newscore.themes.cli import _build_service, daemon_cmd, theme_app
+from newscore.themes.db import DEFAULT_DB_PATH
 
 
 class MatcherChoice(str, Enum):
@@ -52,6 +53,27 @@ app = typer.Typer(
 )
 app.add_typer(theme_app, name="theme")
 app.command("daemon", help="Запустить фоновый scheduler (Step 1).")(daemon_cmd)
+
+
+@app.command("web")
+def web_cmd(
+    host: str = typer.Option("127.0.0.1", "--host"),
+    port: int = typer.Option(8000, "--port"),
+    db: Path = typer.Option(DEFAULT_DB_PATH, "--db"),
+    config: Path = typer.Option(
+        Path("configs/sources.yaml"), "--config", "-c", exists=True
+    ),
+    log_level: str = typer.Option("INFO", "--log-level"),
+) -> None:
+    """Запустить web-интерфейс в браузере (Step 2)."""
+    import uvicorn
+
+    from newscore.web import create_app
+
+    configure(level=log_level, fmt="console")
+    service = _build_service(db, config)
+    app_ = create_app(service)
+    uvicorn.run(app_, host=host, port=port, log_level=log_level.lower())
 
 
 @app.command("briefing")
@@ -105,7 +127,7 @@ def briefing(
         raise typer.Exit(code=1)
 
 
-_SUBCOMMANDS = {"briefing", "theme", "daemon"}
+_SUBCOMMANDS = {"briefing", "theme", "daemon", "web"}
 
 
 def main() -> None:
