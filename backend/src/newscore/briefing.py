@@ -24,7 +24,7 @@ class BriefingRequest:
     query: str
     top_n: int
     freshness_days: int
-    matcher_name: Literal["embedding", "bm25"]
+    matcher_name: Literal["embedding", "bm25", "hybrid", "rerank"]
     trace: bool
     run_id: str
 

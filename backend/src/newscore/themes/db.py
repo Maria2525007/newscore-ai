@@ -15,7 +15,7 @@ from pathlib import Path
 from newscore.themes.models import ArticleSnapshot, Theme, ThemeRun
 
 DEFAULT_DB_PATH = Path("data/newscore.db")
-SCHEMA_VERSION = 1
+SCHEMA_VERSION = 2
 
 _SCHEMA_V1: list[str] = [
     """
@@ -67,6 +67,43 @@ _SCHEMA_V1: list[str] = [
 ]
 
 
+# ADR-25 + ADR-24: semantic novelty + расширение matcher до hybrid/rerank.
+# Изменения:
+#   1) articles += title_emb BLOB, duplicate_of_url_hash TEXT, similarity_score REAL
+#   2) themes.matcher CHECK расширен до {embedding,bm25,hybrid,rerank}
+#      (требует recreate-таблицы, т.к. SQLite не умеет ALTER CHECK)
+_SCHEMA_V2: list[str] = [
+    # 1) Add novelty columns to articles. SQLite поддерживает ADD COLUMN с 3.2+.
+    "ALTER TABLE articles ADD COLUMN title_emb BLOB",
+    "ALTER TABLE articles ADD COLUMN duplicate_of_url_hash TEXT",
+    "ALTER TABLE articles ADD COLUMN similarity_score REAL",
+    # 2) Recreate themes с расширенным CHECK на matcher.
+    """
+    CREATE TABLE themes_v2 (
+      id              TEXT PRIMARY KEY,
+      query           TEXT NOT NULL,
+      period_seconds  INTEGER NOT NULL CHECK (period_seconds >= 60),
+      matcher         TEXT NOT NULL
+                        CHECK (matcher IN ('embedding','bm25','hybrid','rerank')),
+      top_n           INTEGER NOT NULL DEFAULT 10 CHECK (top_n BETWEEN 1 AND 50),
+      days            INTEGER NOT NULL DEFAULT 7 CHECK (days BETWEEN 1 AND 30),
+      status          TEXT NOT NULL DEFAULT 'active'
+                        CHECK (status IN ('active','paused')),
+      created_at      TEXT NOT NULL,
+      next_run_at     TEXT NOT NULL,
+      last_run_id     TEXT
+    )
+    """,
+    "INSERT INTO themes_v2 (id, query, period_seconds, matcher, top_n, days, "
+    "status, created_at, next_run_at, last_run_id) "
+    "SELECT id, query, period_seconds, matcher, top_n, days, status, "
+    "created_at, next_run_at, last_run_id FROM themes",
+    "DROP TABLE themes",
+    "ALTER TABLE themes_v2 RENAME TO themes",
+    "CREATE INDEX IF NOT EXISTS idx_themes_due ON themes(status, next_run_at)",
+]
+
+
 def connect(path: Path | str) -> sqlite3.Connection:
     """Открыть соединение с применением миграций и PRAGMA."""
     p = Path(path) if not isinstance(path, Path) else path
@@ -99,16 +136,21 @@ def _apply_pragmas(conn: sqlite3.Connection) -> None:
 
 
 def migrate(conn: sqlite3.Connection) -> None:
-    """Применить _SCHEMA_V1 идемпотентно; bump user_version."""
+    """Поступательная миграция 0 → 1 → 2; идемпотентно."""
     cur = conn.cursor()
     current = cur.execute("PRAGMA user_version").fetchone()[0]
     if current >= SCHEMA_VERSION:
         return
     cur.execute("BEGIN IMMEDIATE")
     try:
-        for stmt in _SCHEMA_V1:
-            cur.execute(stmt)
-        cur.execute(f"PRAGMA user_version = {SCHEMA_VERSION}")
+        if current < 1:
+            for stmt in _SCHEMA_V1:
+                cur.execute(stmt)
+            cur.execute("PRAGMA user_version = 1")
+        if current < 2:
+            for stmt in _SCHEMA_V2:
+                cur.execute(stmt)
+            cur.execute("PRAGMA user_version = 2")
         cur.execute("COMMIT")
     except Exception:
         cur.execute("ROLLBACK")
@@ -153,6 +195,8 @@ def row_to_run(row: sqlite3.Row) -> ThemeRun:
 
 
 def row_to_article(row: sqlite3.Row) -> ArticleSnapshot:
+    # row.keys() безопасно — sqlite3.Row поддерживает iteration.
+    cols = set(row.keys())
     return ArticleSnapshot(
         url_hash=row["url_hash"],
         theme_id=row["theme_id"],
@@ -161,6 +205,14 @@ def row_to_article(row: sqlite3.Row) -> ArticleSnapshot:
         first_seen_at=_parse_dt(row["first_seen_at"]),
         last_score=row["last_score"],
         payload=json.loads(row["payload_json"]),
+        duplicate_of_url_hash=(
+            row["duplicate_of_url_hash"]
+            if "duplicate_of_url_hash" in cols
+            else None
+        ),
+        similarity_score=(
+            row["similarity_score"] if "similarity_score" in cols else None
+        ),
     )
 
 

@@ -6,7 +6,8 @@ from typing import Literal
 from pydantic import BaseModel, Field
 
 ThemeStatus = Literal["active", "paused"]
-MatcherName = Literal["embedding", "bm25"]
+# ADR-24 расширяет matcher до hybrid/rerank поверх baseline embedding/bm25.
+MatcherName = Literal["embedding", "bm25", "hybrid", "rerank"]
 
 
 class Theme(BaseModel):
@@ -43,3 +44,7 @@ class ArticleSnapshot(BaseModel):
     first_seen_at: datetime
     last_score: float
     payload: dict
+    # ADR-25: semantic novelty layer. Когда статья определена как cross-source
+    # дубликат по cosine 1-NN над e5-emb заголовков, эти поля заполняются.
+    duplicate_of_url_hash: str | None = None
+    similarity_score: float | None = None

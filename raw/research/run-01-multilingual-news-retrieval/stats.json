@@ -1,0 +1,76 @@
+{
+    "query": "multilingual dense retrieval news short query long document hybrid BM25 e5 BGE",
+    "started_at": "2026-05-26T17:05:11Z",
+    "stage": 1,
+    "ok": true,
+    "warnings": [],
+    "language": {
+        "detected": "ca",
+        "confidence": 0.5714277783780145
+    },
+    "discover": {
+        "n_candidates": 79,
+        "n_unique": 79,
+        "per_source": {
+            "openalex": 29,
+            "s2": 0,
+            "arxiv": 0,
+            "crossref": 50,
+            "europepmc": 0,
+            "core": 0
+        },
+        "warnings": [],
+        "seconds": 26.84
+    },
+    "n_papers_after_truncate": 30,
+    "fetch": {
+        "n_attempted": 30,
+        "n_ok": 25,
+        "n_no_oa": 5,
+        "seconds": 52.93
+    },
+    "parse": {
+        "n_ok": 25,
+        "n_fail": 0,
+        "seconds": 732.56
+    },
+    "index": {
+        "n_papers": 30,
+        "n_chunks_total": 59,
+        "n_failed": 0,
+        "seconds": 7.83
+    },
+    "retrieve": {
+        "retrieval_profile": "fast",
+        "n_hits": 20,
+        "seconds": 0.02
+    },
+    "traverse": {
+        "n_seeds": 5,
+        "n_raw_candidates": 268,
+        "n_after_specter_gate": 243,
+        "n_final": 12,
+        "api_calls": {
+            "s2_refs": 5,
+            "s2_citers": 5,
+            "crossref": 5
+        },
+        "warnings": [
+            "seed has no DOI: '8297c6e1d240f354'"
+        ],
+        "seconds": 4.35
+    },
+    "quality_mark": {
+        "n_marked": 0
+    },
+    "report": {
+        "ok": false,
+        "issues": [
+            "References entries not cited in body: ['S14', 'S15']"
+        ],
+        "n_body_markers": 13,
+        "n_ref_entries": 15
+    },
+    "total_seconds": 824.79,
+    "finished_at": "2026-05-26T17:18:56Z"
+}

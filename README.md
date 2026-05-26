@@ -101,7 +101,7 @@ JSON в stdout. Схема:
 | `backend/src/newscore/` | Python-пакет: CLI, парсер, матчер, оркестратор, summarizer |
 | `backend/src/newscore/themes/` | Step 1: SQLite + ThemeService + AsyncScheduler |
 | `backend/src/newscore/web/` | Step 2: FastAPI + Jinja2 templates |
-| `backend/tests/` | `unit/` / `integration/` / `qualitative/` (114 тестов) |
+| `backend/tests/` | `unit/` / `integration/` / `qualitative/` / `e2e/` (114 + 6 Playwright) |
 | `configs/sources.yaml` | Конфиг 5 RSS-источников |
 | `data/` | SQLite база (ignored) |
 | `raw/` | Spec, architecture, brief, roadmap, baseline |

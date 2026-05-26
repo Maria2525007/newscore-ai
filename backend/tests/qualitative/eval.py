@@ -18,7 +18,13 @@ import typer
 import yaml
 
 from newscore.config import load_config
-from newscore.matcher import Bm25Matcher, EmbeddingMatcher, Matcher
+from newscore.matcher import (
+    Bm25Matcher,
+    EmbeddingMatcher,
+    HybridMatcher,
+    Matcher,
+    RerankMatcher,
+)
 from newscore.models import EnrichedArticle
 from newscore.parser import FeedParser
 
@@ -116,6 +122,18 @@ def _build_matcher(name: str) -> Matcher:
         return EmbeddingMatcher()
     if name == "bm25":
         return Bm25Matcher()
+    if name == "hybrid":
+        return HybridMatcher()
+    if name == "hybrid_cc":
+        return HybridMatcher(fusion="cc", cc_alpha=0.5)
+    if name == "rerank":
+        return RerankMatcher()
+    if name == "rerank_embed":
+        # Эксперимент: rerank поверх EmbeddingMatcher (не HybridMatcher).
+        # На малом snapshot embedding alone доминирует, hybrid penalize'ит
+        # semantic-only doc'и через RRF — rerank поверх embedding получает
+        # более полный pool кандидатов для семантических запросов.
+        return RerankMatcher(base=EmbeddingMatcher())
     raise ValueError(f"unknown matcher: {name}")
 
 

@@ -1,0 +1,16 @@
+# Knowledge Base
+> 12 documents, ~351,881 tokens estimated, extracted 2026-05-26 via doc2kb@unknown.
+
+## PDFs
+- [01-rusbeir-kovalev-2025.pdf](docs/doc-001-01-rusbeir-kovalev-2025.md): 11 pages, ~15,893 tokens
+- [02-bm25-to-corrective-rag-akarsu-2026.pdf](docs/doc-002-02-bm25-to-corrective-rag-akarsu-2026.md): 11 pages, ~15,295 tokens
+- [03-m3-embedding-bge-chen-2024.pdf](docs/doc-003-03-m3-embedding-bge-chen-2024.md): 18 pages, ~30,502 tokens
+- [04-mgte-zhang-2024.pdf](docs/doc-004-04-mgte-zhang-2024.md): 20 pages, ~48,247 tokens
+- [05-milco-lsr-nguyen-2025.pdf](docs/doc-005-05-milco-lsr-nguyen-2025.md): 25 pages, ~49,971 tokens
+- [06-stanford-news-narratives-hanley-2025.pdf](docs/doc-006-06-stanford-news-narratives-hanley-2025.md): 33 pages, ~42,724 tokens
+- [07-bertrend-emerging-trends-boutaleb-2024.pdf](docs/doc-007-07-bertrend-emerging-trends-boutaleb-2024.md): 17 pages, ~20,034 tokens
+- [08-umass-fsd-temporal-bias-wurzer-2022.pdf](docs/doc-008-08-umass-fsd-temporal-bias-wurzer-2022.md): 4 pages, ~6,256 tokens
+- [09-nature-of-novelty-zhao-2005.pdf](docs/doc-009-09-nature-of-novelty-zhao-2005.md): 37 pages, ~17,217 tokens
+- [10-centroid-baseline-mds-goncalves-2023.pdf](docs/doc-010-10-centroid-baseline-mds-goncalves-2023.md): 10 pages, ~13,290 tokens
+- [11-qfms-survey-alanzi-2023.pdf](docs/doc-011-11-qfms-survey-alanzi-2023.md): 12 pages, ~16,448 tokens
+- [12-comprehensive-ats-review-cajueiro-2023.pdf](docs/doc-012-12-comprehensive-ats-review-cajueiro-2023.md): 94 pages, ~76,004 tokens

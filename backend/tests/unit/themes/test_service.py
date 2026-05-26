@@ -22,7 +22,11 @@ from newscore.themes.service import ThemeNotFound, ThemeService, url_hash
 # ---- helpers ------------------------------------------------------------
 
 
-def _enriched(url: str, title: str = "t") -> EnrichedArticle:
+def _enriched(url: str, title: str | None = None) -> EnrichedArticle:
+    # Default title = unique per URL — semantic novelty (ADR-25) не должен
+    # считать legacy-тестовые статьи дубликатами друг друга.
+    if title is None:
+        title = f"Title for {url}"
     return EnrichedArticle(
         source="s",
         title=title,

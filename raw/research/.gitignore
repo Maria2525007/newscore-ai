@@ -1,0 +1,23 @@
+# ultrasearch snapshots — heavy artifacts, не для git
+# Если нужны в репо: GitLFS или явно `git add -f`
+
+# PDF cache (десятки MB на run)
+**/pdfs/
+
+# SQLite + WAL
+**/corpus.db
+**/corpus.db-shm
+**/corpus.db-wal
+
+# Pipeline raw logs (могут содержать чувствительные API URLs)
+**/pipeline.log
+
+# doc2kb MinerU raw cache — 73 MB, нужен только для повторного запуска Popo
+# постпроцесса; финальные docs/ markdowns уже содержат всю информацию.
+**/tier-a-kb/_mineru/
+
+# Tier A input PDFs — 12 MB raw inputs (восстанавливаются из ультрасерч'а)
+**/tier-a-input/
+
+# Оставляем в git: MANIFEST.md, report.md, stats.json,
+# tier-a-kb/{docs,assets,INDEX.md,AGENTS.md,manifest.json,llms.txt}

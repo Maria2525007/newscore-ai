@@ -56,7 +56,7 @@ def create_app(service: ThemeService) -> FastAPI:
             period_seconds = _parse_period(period)
         except Exception as exc:  # noqa: BLE001
             raise HTTPException(status_code=400, detail=str(exc)) from exc
-        if matcher not in {"embedding", "bm25"}:
+        if matcher not in {"embedding", "bm25", "hybrid", "rerank"}:
             raise HTTPException(status_code=400, detail="bad matcher")
         theme = service.create(
             query=query,

@@ -22,7 +22,13 @@ from newscore.briefing import (
 )
 from newscore.config import load_config
 from newscore.logging import TraceWriter, configure
-from newscore.matcher import Bm25Matcher, EmbeddingMatcher, Matcher
+from newscore.matcher import (
+    Bm25Matcher,
+    EmbeddingMatcher,
+    HybridMatcher,
+    Matcher,
+    RerankMatcher,
+)
 from newscore.parser import FeedParser
 from newscore.repository import InMemoryRepository
 from newscore.summarizer import ExtractiveSummarizer
@@ -33,6 +39,8 @@ from newscore.themes.db import DEFAULT_DB_PATH
 class MatcherChoice(str, Enum):
     embedding = "embedding"
     bm25 = "bm25"
+    hybrid = "hybrid"
+    rerank = "rerank"  # = hybrid + bge-reranker-v2-m3
 
 
 class LogFormat(str, Enum):
@@ -45,6 +53,10 @@ def _matcher_factory(name: str) -> Matcher:
         return EmbeddingMatcher()
     if name == "bm25":
         return Bm25Matcher()
+    if name == "hybrid":
+        return HybridMatcher()
+    if name == "rerank":
+        return RerankMatcher()  # base = HybridMatcher() (default)
     raise ValueError(f"unknown matcher: {name}")
 
 

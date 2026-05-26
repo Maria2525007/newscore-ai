@@ -14,7 +14,30 @@ from newscore.themes.service import ThemeService
 from newscore.web import create_app
 
 
-def _enriched(url: str, title: str = "t") -> EnrichedArticle:
+_DISTINCT_TITLES = [
+    "Курс рубля и доллара на бирже",
+    "Футбольный матч Спартак Зенит",
+    "Литература Достоевского переиздана",
+    "Космический корабль запущен",
+    "Кулинарные рецепты средиземноморья",
+    "Политические выборы в регионе",
+    "Музыкальный концерт филармонии",
+    "Технологии искусственного интеллекта",
+    "Медицина и вакцинация населения",
+    "Образование школьников химии",
+]
+
+
+def _enriched(url: str, title: str | None = None) -> EnrichedArticle:
+    # Default title — семантически РАЗНЫЙ per URL, чтобы semantic novelty
+    # (ADR-25) не помечал тестовые статьи как duplicate друг друга на
+    # реальной e5-модели. Stable mapping через sha256.
+    if title is None:
+        import hashlib
+
+        digest = hashlib.sha256(url.encode("utf-8")).digest()
+        idx = int.from_bytes(digest[:4], "big") % len(_DISTINCT_TITLES)
+        title = _DISTINCT_TITLES[idx]
     return EnrichedArticle(
         source="s",
         title=title,

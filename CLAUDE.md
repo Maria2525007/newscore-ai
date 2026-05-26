@@ -77,7 +77,8 @@ uv run newscore "курс валют" --matcher bm25                          # 
 uv run newscore "запрос" --trace                                     # сохранить полный trace
 uv run pytest backend/tests/unit                                     # быстрые тесты (46)
 uv run pytest backend/tests/integration                              # integration через respx (8)
-uv run pytest backend/tests                                          # все 54
+uv run pytest backend/tests                                          # все 114 (e2e deselected)
+uv run pytest backend/tests/e2e -m e2e                               # Playwright + uvicorn (6)
 uv run python backend/tests/qualitative/eval.py collect --days 30    # снять snapshot корпуса
 uv run python backend/tests/qualitative/eval.py score --id sample-30d  # прогнать score
 ```

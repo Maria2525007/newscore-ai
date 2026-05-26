@@ -15,6 +15,7 @@ dependencies = [
     "python-dotenv>=1.0",
     "tenacity>=8.3",
     "rank-bm25>=0.2.2",
+    "pymorphy3>=2.0.4",
     "numpy>=1.26",
     "fastapi>=0.136.3",
     "uvicorn[standard]>=0.47.0",
@@ -31,6 +32,7 @@ dev = [
     "pytest>=8.0",
     "pytest-cov>=5.0",
     "respx>=0.21",
+    "pytest-playwright>=0.5",
 ]
 
 [build-system]
@@ -48,5 +50,6 @@ testpaths = ["backend/tests"]
 markers = [
     "qual: qualitative evaluation, slow, requires real model and network",
     "slow: tests requiring real embedding model or network",
+    "e2e: browser-driven end-to-end tests (Playwright + live uvicorn)",
 ]
-addopts = "-m 'not qual and not slow'"
+addopts = "-m 'not qual and not slow and not e2e'"
