@@ -1,39 +1,63 @@
 {% extends "base.html" %}
-{% block title %}Темы — NewsCore AI{% endblock %}
+{% block title %}Новостной агент{% endblock %}
+{% block nav_home %}active{% endblock %}
 {% block content %}
-<h1>Темы</h1>
+
+{% set h = (now.hour + 3) % 24 %}
+<div class="page-greeting">
+  <div class="greeting-text">
+    {%- if h >= 6 and h < 12 -%}Доброе утро!
+    {%- elif h >= 12 and h < 18 -%}Добрый день!
+    {%- elif h >= 18 -%}Добрый вечер!
+    {%- else -%}Доброй ночи!{%- endif -%}
+  </div>
+  <div class="greeting-sub">
+    {%- if themes -%}
+      {{ themes|length }}
+      {%- if themes|length == 1 %} тема
+      {%- elif themes|length <= 4 %} темы
+      {%- else %} тем{%- endif %}
+       · обновляется автоматически
+    {%- else -%}
+      Начните с создания первой темы
+    {%- endif -%}
+  </div>
+</div>
+
 {% if not themes %}
-  <p class="empty">Нет тем. <a href="/themes/new">Создать первую</a>.</p>
+  <div class="empty-state">
+    <p>Тем пока нет.</p>
+    <p><a href="/themes/new">Создать первую тему →</a></p>
+  </div>
 {% else %}
-  <table class="themes">
-    <thead>
-      <tr>
-        <th>Запрос</th>
-        <th>Матчер</th>
-        <th>Период</th>
-        <th>Следующий запуск</th>
-        <th>Статус</th>
-      </tr>
-    </thead>
-    <tbody>
-      {% for t in themes %}
-      <tr>
-        <td><a href="/themes/{{ t.id }}">{{ t.query }}</a></td>
-        <td><code>{{ t.matcher }}</code></td>
-        <td>
+  <div class="themes-grid">
+    {% for t in themes %}
+    <a href="/themes/{{ t.id }}" class="theme-card">
+      <div class="theme-card-top">
+        <div class="theme-card-icon">{{ t.query[0] }}</div>
+        <div class="theme-card-query">{{ t.query }}</div>
+        <span class="badge badge-{{ t.status }}">
+          {{ "активна" if t.status == "active" else "пауза" }}
+        </span>
+      </div>
+      <div class="theme-card-badges">
+        <span class="badge">{{ t.matcher }}</span>
+        <span class="badge">каждые
           {%- if t.period_seconds < 3600 -%}
-            {{ (t.period_seconds // 60) }}m
+            &nbsp;{{ (t.period_seconds // 60) }}м
           {%- elif t.period_seconds % 3600 == 0 -%}
-            {{ (t.period_seconds // 3600) }}h
+            &nbsp;{{ (t.period_seconds // 3600) }}ч
           {%- else -%}
-            {{ (t.period_seconds // 3600) }}h{{ ((t.period_seconds % 3600) // 60) }}m
+            &nbsp;{{ (t.period_seconds // 3600) }}ч&nbsp;{{ ((t.period_seconds % 3600) // 60) }}м
           {%- endif -%}
-        </td>
-        <td>{{ t.next_run_at.strftime("%Y-%m-%d %H:%M") }}</td>
-        <td><span class="status status-{{ t.status }}">{{ t.status }}</span></td>
-      </tr>
-      {% endfor %}
-    </tbody>
-  </table>
+        </span>
+      </div>
+      <div class="theme-card-next">
+        Следующий запуск: {{ t.next_run_at | msk }} МСК
+      </div>
+    </a>
+    {% endfor %}
+  </div>
 {% endif %}
+
 {% endblock %}

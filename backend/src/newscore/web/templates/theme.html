@@ -1,92 +1,360 @@
 {% extends "base.html" %}
-{% block title %}{{ theme.query }} — NewsCore AI{% endblock %}
+{% block title %}{{ theme.query }} — Новостной агент{% endblock %}
 {% block content %}
-<header class="theme-header">
-  <h1>{{ theme.query }}</h1>
-  <div class="meta">
-    <code>{{ theme.id }}</code> ·
-    матчер <code>{{ theme.matcher }}</code> ·
-    период {{ (theme.period_seconds // 60) }}м ·
-    статус <span class="status status-{{ theme.status }}">{{ theme.status }}</span>
+
+<div class="detail-header">
+  <div class="detail-title-row">
+    <div class="detail-title">{{ theme.query }}</div>
+    <div class="run-indicator" id="runIndicator">
+      <div class="spinner"></div>
+      <span>Загружаю новости…</span>
+    </div>
   </div>
-  <div class="actions">
-    <form action="/themes/{{ theme.id }}/run" method="post" style="display:inline">
-      <button type="submit">Запустить сейчас</button>
-    </form>
+  <div class="detail-badges">
+    <span class="badge badge-{{ theme.status }}">
+      {{ "активна" if theme.status == "active" else "пауза" }}
+    </span>
+    <span class="badge">{{ "Умный поиск" if theme.matcher == "embedding" else "Поиск по словам" if theme.matcher == "bm25" else theme.matcher }}</span>
+    <span class="badge">каждые
+      {%- if theme.period_seconds < 3600 -%}
+        &nbsp;{{ (theme.period_seconds // 60) }}м
+      {%- elif theme.period_seconds % 3600 == 0 -%}
+        &nbsp;{{ (theme.period_seconds // 3600) }}ч
+      {%- else -%}
+        &nbsp;{{ (theme.period_seconds // 3600) }}ч&nbsp;{{ ((theme.period_seconds % 3600) // 60) }}м
+      {%- endif -%}
+    </span>
+  </div>
+  <div class="detail-actions">
+    <button type="button" class="btn btn-primary" id="runBtn">Запустить сейчас</button>
     {% if theme.status == "active" %}
       <form action="/themes/{{ theme.id }}/pause" method="post" style="display:inline">
-        <button type="submit">Пауза</button>
+        <button type="submit" class="btn">Пауза</button>
       </form>
     {% else %}
       <form action="/themes/{{ theme.id }}/resume" method="post" style="display:inline">
-        <button type="submit">Активировать</button>
+        <button type="submit" class="btn">Активировать</button>
       </form>
     {% endif %}
     <form action="/themes/{{ theme.id }}/delete" method="post"
           style="display:inline"
-          onsubmit="return confirm('Удалить тему?')">
-      <button type="submit" class="danger">Удалить</button>
+          onsubmit="return confirm('Удалить тему «{{ theme.query }}»?')">
+      <button type="submit" class="btn btn-danger">Удалить</button>
     </form>
   </div>
-</header>
+</div>
 
-<section>
-  <h2>Последний запуск</h2>
-  {% if latest %}
-    <p class="run-meta">
-      <strong>{{ latest.started_at.strftime("%Y-%m-%d %H:%M UTC") }}</strong>,
-      {{ latest.items_total }} статей ({{ latest.items_new }} новых),
-      матчер {{ latest.matcher_name }}
-      {%- if latest.partial %} · <span class="warn">partial</span>{% endif -%}
-      {%- if latest.reason and latest.reason != "ok" %} · {{ latest.reason }}{% endif -%}.
-    </p>
-  {% else %}
-    <p class="empty">Ещё не запускалась — нажмите «Запустить сейчас» или дождитесь daemon.</p>
-  {% endif %}
-</section>
+{% if latest %}
+<div class="run-stats">
+  <div class="run-stat">
+    <span class="run-stat-val">{{ latest.items_total }}</span>
+    <span class="run-stat-label">статей найдено</span>
+  </div>
+  <div class="run-stat">
+    <span class="run-stat-val">{{ latest.items_new }}</span>
+    <span class="run-stat-label">новых</span>
+  </div>
+  <div class="run-stat">
+    <span class="run-stat-val">{{ latest.started_at | msk }}</span>
+    <span class="run-stat-label">
+      последний запуск МСК{%- if latest.partial %} · <span class="warn-val">неполный</span>{%- endif -%}
+    </span>
+  </div>
+</div>
+{% else %}
+<p class="run-empty">
+  Ещё не запускалась — нажмите «Запустить сейчас» или дождитесь обновления новостей.
+</p>
+{% endif %}
+
+<div class="briefing-block" id="briefingBlock" style="display:none">
+  <div class="briefing-label">Кратко о теме</div>
+  <p class="briefing-text" id="briefingText"></p>
+</div>
 
 {% if articles %}
-<section>
-  <h2>Статьи ({{ articles|length }})</h2>
-  <ol class="articles">
-    {% for a in articles %}
-    {% set art = a.payload.article %}
-    <li>
-      <a href="{{ art.url }}" target="_blank" rel="noopener">{{ art.title }}</a>
-      <div class="article-meta">
-        <code>{{ art.source }}</code> ·
-        score {{ "%.3f"|format(a.last_score) }} ·
-        {{ art.published_at[:16].replace("T", " ") }}
+<div class="articles-header">
+  <div class="section-label">Статьи ({{ articles|length }})</div>
+  <div class="sort-bar">
+    <span class="sort-label">Сортировка:</span>
+    <button class="sort-btn sort-active" data-field="score" data-dir="desc">
+      По совпадению
+      <span class="sort-arrows">
+        <svg class="arr arr-up" viewBox="0 0 24 24" width="9" height="9" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="18 15 12 9 6 15"/></svg>
+        <svg class="arr arr-dn arr-lit" viewBox="0 0 24 24" width="9" height="9" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+      </span>
+    </button>
+    <button class="sort-btn" data-field="date" data-dir="desc">
+      По новизне
+      <span class="sort-arrows">
+        <svg class="arr arr-up" viewBox="0 0 24 24" width="9" height="9" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="18 15 12 9 6 15"/></svg>
+        <svg class="arr arr-dn" viewBox="0 0 24 24" width="9" height="9" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+      </span>
+    </button>
+  </div>
+</div>
+<div class="articles-list" id="articles-list">
+  {% for a in articles %}
+  {% set art = a.payload.article %}
+  <div class="article-card"
+       data-score="{{ a.last_score }}"
+       data-date="{{ art.published_at }}">
+    <div class="article-top">
+      <span class="article-source">{{ art.source }}</span>
+      <div class="article-right">
+        <div class="score-wrap">
+          <div class="score-track">
+            <div class="score-fill" style="width:{{ [[(a.last_score * 100)|int, 0]|max, 100]|min }}%"></div>
+          </div>
+          <span>{{ "%.2f"|format(a.last_score) }}</span>
+        </div>
+        <span class="article-time">{{ art.published_at | msk }}</span>
       </div>
-      {% if art.summary %}
-        <p class="summary">{{ art.summary }}</p>
-      {% elif art.snippet %}
-        <p class="snippet">{{ art.snippet }}</p>
-      {% endif %}
-    </li>
-    {% endfor %}
-  </ol>
-</section>
+    </div>
+    <a href="{{ art.url }}" target="_blank" rel="noopener" class="article-title">{{ art.title }}</a>
+    {% if art.summary %}
+      <p class="article-summary">{{ art.summary }}</p>
+    {% elif art.snippet %}
+      <p class="article-summary">{{ art.snippet }}</p>
+    {% endif %}
+  </div>
+  {% endfor %}
+</div>
 {% endif %}
 
 {% if runs|length > 1 %}
-<section>
-  <h2>История запусков</h2>
-  <table class="runs">
-    <thead>
-      <tr><th>Когда</th><th>Всего</th><th>Новых</th><th>Reason</th></tr>
-    </thead>
-    <tbody>
-      {% for r in runs %}
-      <tr>
-        <td>{{ r.started_at.strftime("%Y-%m-%d %H:%M") }}</td>
-        <td>{{ r.items_total }}</td>
-        <td>{{ r.items_new }}</td>
-        <td>{{ r.reason or "—" }}{% if r.partial %} <span class="warn">partial</span>{% endif %}</td>
-      </tr>
-      {% endfor %}
-    </tbody>
-  </table>
-</section>
+<hr class="divider">
+<div class="section-label">История запусков</div>
+<table class="runs-table">
+  <thead>
+    <tr>
+      <th>Когда (МСК)</th><th>Всего</th><th>Новых</th><th>Статус</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for r in runs %}
+    <tr>
+      <td>{{ r.started_at | msk }}</td>
+      <td>{{ r.items_total }}</td>
+      <td>{{ r.items_new }}</td>
+      <td>
+        {{ r.reason if r.reason and r.reason != "ok" else "успешно" }}{% if r.partial %} (<span class="warn-val">неполный</span>){% endif %}
+      </td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
 {% endif %}
+
+<!-- async run -->
+<script>
+(function() {
+  var themeId = {{ theme.id | tojson }};
+  var btn = document.getElementById('runBtn');
+  var indicator = document.getElementById('runIndicator');
+  var pollTimer = null;
+  var wasRunning = false;
+
+  function setRunning(yes) {
+    if (yes) {
+      indicator.classList.add('visible');
+      btn.disabled = true;
+      btn.textContent = 'Загружаю…';
+    } else {
+      indicator.classList.remove('visible');
+      btn.disabled = false;
+      btn.textContent = 'Запустить сейчас';
+    }
+  }
+
+  function poll() {
+    fetch('/themes/' + themeId + '/running')
+      .then(function(r) { return r.json(); })
+      .then(function(data) {
+        if (data.running) {
+          wasRunning = true;
+          setRunning(true);
+        } else {
+          setRunning(false);
+          if (wasRunning) {
+            clearInterval(pollTimer);
+            pollTimer = null;
+            window.dispatchEvent(new Event('briefing:refresh'));
+            window.location.reload();
+          }
+        }
+      })
+      .catch(function() {}); // молча игнорируем сетевые ошибки
+  }
+
+  function startPolling() {
+    if (pollTimer) return;
+    pollTimer = setInterval(poll, 2000);
+  }
+
+  btn.addEventListener('click', function() {
+    setRunning(true);
+    wasRunning = false;
+    fetch('/themes/' + themeId + '/run-async', { method: 'POST' })
+      .then(function(r) { return r.json(); })
+      .then(function(data) {
+        if (data.status === 'started' || data.status === 'already_running') {
+          startPolling();
+        }
+      })
+      .catch(function() { setRunning(false); });
+  });
+
+  // при открытии страницы — вдруг уже идёт запуск
+  poll();
+  startPolling();
+})();
+</script>
+
+<!-- briefing typewriter -->
+<script>
+(function() {
+  var themeId = {{ theme.id | tojson }};
+  var block = document.getElementById('briefingBlock');
+  var textEl = document.getElementById('briefingText');
+  if (!block || !textEl) return;
+
+  function typewrite(text, onDone) {
+    textEl.textContent = '';
+    var cursor = document.createElement('span');
+    cursor.className = 'briefing-cursor';
+    textEl.appendChild(cursor);
+
+    var i = 0;
+    var speed = Math.max(12, Math.min(28, 3000 / text.length)); // 3s total
+    var timer = setInterval(function() {
+      if (i < text.length) {
+        textEl.insertBefore(document.createTextNode(text[i++]), cursor);
+      } else {
+        clearInterval(timer);
+        cursor.remove();
+        if (onDone) onDone();
+      }
+    }, speed);
+  }
+
+  function loadBriefing() {
+    fetch('/themes/' + themeId + '/briefing')
+      .then(function(r) { return r.json(); })
+      .then(function(data) {
+        if (data.text) {
+          block.style.display = 'block';
+          typewrite(data.text);
+        }
+      })
+      .catch(function() {});
+  }
+
+  // запустить после загрузки страницы
+  loadBriefing();
+
+  // обновить брифинг после завершения async-запуска
+  window.addEventListener('briefing:refresh', loadBriefing);
+})();
+</script>
+
+<!-- keyword highlight -->
+<script>
+(function() {
+  var query = {{ theme.query | tojson }};
+  var words = query.toLowerCase().split(/[\s,]+/).filter(function(w) { return w.length > 2; });
+
+  if (words.length) {
+    function highlightNode(textNode) {
+      var text = textNode.textContent;
+      var lower = text.toLowerCase();
+      var ranges = [];
+      words.forEach(function(word) {
+        var i = 0, idx;
+        while ((idx = lower.indexOf(word, i)) !== -1) {
+          ranges.push([idx, idx + word.length]);
+          i = idx + word.length;
+        }
+      });
+      if (!ranges.length) return null;
+      ranges.sort(function(a, b) { return a[0] - b[0]; });
+      var merged = [ranges[0].slice()];
+      for (var i = 1; i < ranges.length; i++) {
+        var last = merged[merged.length - 1];
+        if (ranges[i][0] <= last[1]) { last[1] = Math.max(last[1], ranges[i][1]); }
+        else { merged.push(ranges[i].slice()); }
+      }
+      var frag = document.createDocumentFragment();
+      var cursor = 0;
+      merged.forEach(function(r) {
+        if (r[0] > cursor) frag.appendChild(document.createTextNode(text.slice(cursor, r[0])));
+        var m = document.createElement('mark');
+        m.textContent = text.slice(r[0], r[1]);
+        frag.appendChild(m);
+        cursor = r[1];
+      });
+      if (cursor < text.length) frag.appendChild(document.createTextNode(text.slice(cursor)));
+      return frag;
+    }
+    function walk(el) {
+      Array.from(el.childNodes).forEach(function(node) {
+        if (node.nodeType === 3) { var r = highlightNode(node); if (r) el.replaceChild(r, node); }
+        else if (node.nodeType === 1 && node.tagName !== 'SCRIPT' && node.tagName !== 'STYLE') { walk(node); }
+      });
+    }
+    var list = document.getElementById('articles-list');
+    if (list) walk(list);
+  }
+})();
+</script>
+
+<!-- sorting -->
+<script>
+(function() {
+  var list = document.getElementById('articles-list');
+  if (!list) return;
+
+  var cards = Array.from(list.querySelectorAll('.article-card'));
+  var state = { field: 'score', dir: 'desc' };
+
+  function applySort() {
+    var sorted = cards.slice().sort(function(a, b) {
+      var va, vb;
+      if (state.field === 'score') {
+        va = parseFloat(a.dataset.score);
+        vb = parseFloat(b.dataset.score);
+      } else {
+        va = new Date(a.dataset.date).getTime();
+        vb = new Date(b.dataset.date).getTime();
+      }
+      return state.dir === 'desc' ? vb - va : va - vb;
+    });
+    sorted.forEach(function(c) { list.appendChild(c); });
+  }
+
+  function updateUI() {
+    document.querySelectorAll('.sort-btn').forEach(function(btn) {
+      var active = btn.dataset.field === state.field;
+      btn.classList.toggle('sort-active', active);
+      btn.querySelector('.arr-up').classList.toggle('arr-lit', active && state.dir === 'asc');
+      btn.querySelector('.arr-dn').classList.toggle('arr-lit', active && state.dir === 'desc');
+    });
+  }
+
+  document.querySelectorAll('.sort-btn').forEach(function(btn) {
+    btn.addEventListener('click', function() {
+      var field = btn.dataset.field;
+      if (state.field === field) {
+        state.dir = state.dir === 'desc' ? 'asc' : 'desc';
+      } else {
+        state.field = field;
+        state.dir = 'desc';
+      }
+      applySort();
+      updateUI();
+    });
+  });
+})();
+</script>
+
 {% endblock %}

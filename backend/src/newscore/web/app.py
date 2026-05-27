@@ -6,11 +6,12 @@
 
 from __future__ import annotations
 
-from datetime import datetime, timezone
+import threading
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
 from fastapi import FastAPI, Form, HTTPException, Request
-from fastapi.responses import HTMLResponse, RedirectResponse
+from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 
@@ -18,13 +19,31 @@ from newscore.themes.cli import _parse_period
 from newscore.themes.service import ThemeNotFound, ThemeService
 
 _HERE = Path(__file__).parent
+
+
+def _to_msk(value: datetime | str, fmt: str = "%d.%m %H:%M") -> str:
+    """Конвертирует UTC datetime или ISO-строку в МСК (UTC+3)."""
+    if isinstance(value, str):
+        try:
+            dt = datetime.fromisoformat(value.replace("Z", "+00:00"))
+        except ValueError:
+            return value
+    else:
+        dt = value
+    if dt.tzinfo is None:
+        dt = dt.replace(tzinfo=timezone.utc)
+    return (dt + timedelta(hours=3)).strftime(fmt)
 TEMPLATES_DIR = _HERE / "templates"
 STATIC_DIR = _HERE / "static"
+
+
+_running: dict[str, bool] = {}  # theme_id → выполняется прямо сейчас
 
 
 def create_app(service: ThemeService) -> FastAPI:
     app = FastAPI(title="NewsCore AI")
     templates = Jinja2Templates(directory=str(TEMPLATES_DIR))
+    templates.env.filters["msk"] = _to_msk
     app.mount(
         "/static", StaticFiles(directory=str(STATIC_DIR)), name="static"
     )
@@ -90,12 +109,72 @@ def create_app(service: ThemeService) -> FastAPI:
 
     @app.post("/themes/{theme_id}/run")
     def run_theme(theme_id: str) -> RedirectResponse:
-        """Синхронный запуск (~30s холодный embedding). Браузер ждёт."""
+        """Синхронный запуск — оставлен для совместимости."""
         try:
             service.run_now(theme_id)
         except ThemeNotFound:
             raise HTTPException(status_code=404, detail="theme not found") from None
         return RedirectResponse(url=f"/themes/{theme_id}", status_code=303)
+
+    @app.post("/themes/{theme_id}/run-async")
+    def run_theme_async(theme_id: str) -> JSONResponse:
+        """Запуск в фоновом потоке — браузер не блокируется."""
+        if _running.get(theme_id):
+            return JSONResponse({"status": "already_running"})
+        try:
+            service.get(theme_id)
+        except ThemeNotFound:
+            raise HTTPException(status_code=404, detail="theme not found") from None
+
+        def _worker() -> None:
+            _running[theme_id] = True
+            try:
+                service.run_now(theme_id)
+            finally:
+                _running[theme_id] = False
+
+        threading.Thread(target=_worker, daemon=True).start()
+        return JSONResponse({"status": "started"})
+
+    @app.get("/themes/{theme_id}/running")
+    def theme_is_running(theme_id: str) -> JSONResponse:
+        """Проверка: идёт ли сейчас запуск темы."""
+        return JSONResponse({"running": _running.get(theme_id, False)})
+
+    @app.get("/themes/{theme_id}/briefing")
+    def theme_briefing(theme_id: str) -> JSONResponse:
+        """Краткий брифинг по последним статьям темы."""
+        try:
+            theme = service.get(theme_id)
+        except ThemeNotFound:
+            raise HTTPException(status_code=404, detail="theme not found") from None
+        articles = service.latest_articles(theme_id, limit=10)
+        if not articles:
+            return JSONResponse({"text": ""})
+
+        _NOISE = ("фото:", "источник:", "читайте также", "подписывайтесь", "©")
+        sentences: list[str] = []
+        for a in articles[:5]:
+            art = a.payload.get("article", {})
+            raw = art.get("summary") or art.get("snippet") or ""
+            if not raw:
+                continue
+            for part in raw.replace("…", ".").replace("\n", " ").split("."):
+                part = part.strip()
+                if (len(part) > 40
+                        and not any(n in part.lower() for n in _NOISE)
+                        and part[-1:] not in ("«", "„", '"')):
+                    sentences.append(part.rstrip(".,:;") + ".")
+                    break
+
+        if not sentences:
+            return JSONResponse({"text": ""})
+
+        n = len(articles)
+        noun = "материал" if n == 1 else ("материала" if n <= 4 else "материалов")
+        intro = f"По теме «{theme.query}» найдено {n} {noun}. "
+        text = intro + " ".join(sentences[:3])
+        return JSONResponse({"text": text})
 
     @app.post("/themes/{theme_id}/pause")
     def pause_theme(theme_id: str) -> RedirectResponse:
