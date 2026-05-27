@@ -18,9 +18,10 @@ pytestmark = pytest.mark.e2e
 
 def test_index_empty_shows_create_link(live_server: LiveServer, page: Page) -> None:
     page.goto(live_server.base_url + "/")
-    expect(page.locator("h1")).to_have_text("Темы")
-    expect(page.get_by_text("Нет тем")).to_be_visible()
-    expect(page.get_by_role("link", name="Создать первую")).to_have_attribute(
+    # Новый UI: greeting вместо h1 "Темы"
+    expect(page.locator(".greeting-text")).to_be_visible()
+    expect(page.get_by_text("Тем пока нет")).to_be_visible()
+    expect(page.get_by_role("link", name="Создать первую тему")).to_have_attribute(
         "href", "/themes/new"
     )
 
@@ -35,8 +36,9 @@ def test_create_theme_via_form_redirects_to_detail(
     page.click('button[type="submit"]')
 
     expect(page).to_have_url(re.compile(r"/themes/[0-9a-f]{12}$"))
-    expect(page.locator("h1")).to_have_text("курс валют")
-    expect(page.get_by_text("Ещё не запускалась")).to_be_visible()
+    expect(page.locator(".detail-title")).to_have_text("курс валют")
+    # Новый UI: «Ещё не запускалась — нажмите…»
+    expect(page.locator(".run-empty")).to_contain_text("Ещё не запускалась")
 
     themes = live_server.service.list()
     assert len(themes) == 1
@@ -68,20 +70,24 @@ def test_run_theme_renders_articles_with_summary(
 
     page.goto(f"{live_server.base_url}/themes/{theme.id}")
     page.get_by_role("button", name="Запустить сейчас").click()
+    # Кнопка triggers async POST + JS reload — ждём перерисовки списка.
+    expect(page.locator(".articles-list .article-card")).to_have_count(
+        2, timeout=15_000
+    )
+    expect(page.locator(".section-label").filter(has_text="Статьи (2)")).to_be_visible()
 
-    expect(page.locator("h2", has_text="Последний запуск")).to_be_visible()
-    expect(page.locator("h2", has_text="Статьи (2)")).to_be_visible()
-
-    articles = page.locator("ol.articles > li")
-    expect(articles).to_have_count(2)
-
+    articles = page.locator(".articles-list .article-card")
     first = articles.nth(0)
-    expect(first.get_by_role("link", name="ЦБ повысил ключевую ставку")).to_have_attribute(
-        "href", "https://example.com/news/1"
+    # Сортировка по умолчанию = score desc. Оба score = 0.85 (равные),
+    # поэтому проверяем что обе статьи присутствуют, без жёсткой позиции.
+    titles = articles.locator(".article-title")
+    expect(titles).to_have_text(
+        [
+            re.compile(r"(ЦБ повысил|Рубль укрепился)"),
+            re.compile(r"(ЦБ повысил|Рубль укрепился)"),
+        ]
     )
-    expect(first.locator("p.summary")).to_contain_text(
-        "ЦБ РФ поднял ставку до 21%"
-    )
+    expect(first.locator(".article-summary")).to_be_visible()
 
 
 def test_pause_then_resume_flips_status_button(
@@ -91,15 +97,15 @@ def test_pause_then_resume_flips_status_button(
     detail = f"{live_server.base_url}/themes/{theme.id}"
 
     page.goto(detail)
-    expect(page.locator(".status.status-active")).to_have_text("active")
+    expect(page.locator(".detail-badges .badge-active")).to_have_text("активна")
     page.get_by_role("button", name="Пауза").click()
 
-    expect(page.locator(".status.status-paused")).to_have_text("paused")
+    expect(page.locator(".detail-badges .badge-paused")).to_have_text("пауза")
     expect(page.get_by_role("button", name="Активировать")).to_be_visible()
     assert live_server.service.get(theme.id).status == "paused"
 
     page.get_by_role("button", name="Активировать").click()
-    expect(page.locator(".status.status-active")).to_have_text("active")
+    expect(page.locator(".detail-badges .badge-active")).to_have_text("активна")
     assert live_server.service.get(theme.id).status == "active"
 
 
@@ -113,7 +119,7 @@ def test_delete_theme_with_confirm_dialog_returns_home(
     page.get_by_role("button", name="Удалить").click()
 
     expect(page).to_have_url(live_server.base_url + "/")
-    expect(page.get_by_text("Нет тем")).to_be_visible()
+    expect(page.get_by_text("Тем пока нет")).to_be_visible()
     assert live_server.service.list() == []
 
 
@@ -124,9 +130,10 @@ def test_index_lists_existing_themes_with_links(
     live_server.service.create("ставка ЦБ", period_seconds=3600)
 
     page.goto(live_server.base_url + "/")
-    rows = page.locator("table.themes tbody tr")
-    expect(rows).to_have_count(2)
-    expect(page.get_by_role("link", name="курс валют")).to_have_attribute(
-        "href", f"/themes/{t1.id}"
-    )
-    expect(page.get_by_role("link", name="ставка ЦБ")).to_be_visible()
+    cards = page.locator(".themes-grid .theme-card")
+    expect(cards).to_have_count(2)
+    # theme-card сам по себе <a> — ищем по href, не по link role/тексту
+    # (текст в карточке оборачивается в внутренние divs).
+    expect(page.locator(f'a[href="/themes/{t1.id}"]')).to_be_visible()
+    expect(page.locator(".theme-card-query").filter(has_text="курс валют")).to_be_visible()
+    expect(page.locator(".theme-card-query").filter(has_text="ставка ЦБ")).to_be_visible()

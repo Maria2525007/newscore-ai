@@ -27,10 +27,15 @@
                value="1h" placeholder="1h">
       </div>
       <div class="form-group">
-        <label class="form-label" for="matcher">Матчер</label>
+        <label class="form-label" for="matcher">
+          Матчер
+          <span class="form-hint">rerank — макс. точность, embedding — быстрее</span>
+        </label>
         <select class="form-select" id="matcher" name="matcher">
-          <option value="embedding" selected>Умный поиск (рекомендуется)</option>
-          <option value="bm25">Поиск по словам</option>
+          <option value="rerank" selected>Максимальная точность (rerank)</option>
+          <option value="hybrid">Гибрид BM25 + смысл (hybrid)</option>
+          <option value="embedding">Быстрый умный поиск (embedding)</option>
+          <option value="bm25">Поиск по словам (bm25)</option>
         </select>
       </div>
     </div>

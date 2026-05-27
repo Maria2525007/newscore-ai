@@ -94,7 +94,7 @@ def test_index_empty(tmp_path: Path) -> None:
     client, _ = _make_client(tmp_path, FakeOrchestrator([]))
     response = client.get("/")
     assert response.status_code == 200
-    assert "Нет тем" in response.text
+    assert "Тем пока нет" in response.text
 
 
 def test_create_theme_via_form_redirects_to_detail(tmp_path: Path) -> None:

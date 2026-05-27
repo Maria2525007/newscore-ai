@@ -67,7 +67,11 @@ def create_app(service: ThemeService) -> FastAPI:
     def create_theme(
         query: str = Form(..., min_length=1, max_length=500),
         period: str = Form("1h"),
-        matcher: str = Form("embedding"),
+        # Default = rerank: hybrid (BM25+e5 RRF k=60) → bge-reranker-v2-m3
+        # cross-encoder. На T²-RAGBench (Akarsu 2026): +17.4 п.п. R@5
+        # vs hybrid alone, +39.7% MRR@3. RusBEIR (Kovalev 2025): +7.71 п.п.
+        # nDCG@10 vs BM25 alone. На холодном старте качает ~570 MB модели.
+        matcher: str = Form("rerank"),
         top_n: int = Form(10),
         days: int = Form(7),
     ) -> RedirectResponse:

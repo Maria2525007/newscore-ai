@@ -14,7 +14,13 @@
     <span class="badge badge-{{ theme.status }}">
       {{ "активна" if theme.status == "active" else "пауза" }}
     </span>
-    <span class="badge">{{ "Умный поиск" if theme.matcher == "embedding" else "Поиск по словам" if theme.matcher == "bm25" else theme.matcher }}</span>
+    <span class="badge">
+      {%- if theme.matcher == "rerank" -%}Макс. точность
+      {%- elif theme.matcher == "hybrid" -%}Гибрид BM25 + смысл
+      {%- elif theme.matcher == "embedding" -%}Умный поиск
+      {%- elif theme.matcher == "bm25" -%}Поиск по словам
+      {%- else -%}{{ theme.matcher }}{%- endif -%}
+    </span>
     <span class="badge">каждые
       {%- if theme.period_seconds < 3600 -%}
         &nbsp;{{ (theme.period_seconds // 60) }}м
