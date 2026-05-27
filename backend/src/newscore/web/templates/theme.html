@@ -80,7 +80,10 @@
 
 {% if articles %}
 <div class="articles-header">
-  <div class="section-label">Статьи ({{ articles|length }})</div>
+  <div class="section-label">
+    Статьи ({{ articles|length }})
+    <button class="btn btn-danger btn-xs" id="clearArticlesBtn" style="margin-left:0.6rem">Очистить</button>
+  </div>
   <div class="sort-bar">
     <span class="sort-label">Сортировка:</span>
     <button class="sort-btn sort-active" data-field="score" data-dir="desc">
@@ -198,7 +201,7 @@
     pollTimer = setInterval(poll, 2000);
   }
 
-  btn.addEventListener('click', function() {
+  function triggerRun() {
     setRunning(true);
     wasRunning = false;
     fetch('/themes/' + themeId + '/run-async', { method: 'POST' })
@@ -209,11 +212,19 @@
         }
       })
       .catch(function() { setRunning(false); });
-  });
+  }
+
+  btn.addEventListener('click', triggerRun);
 
   // при открытии страницы — вдруг уже идёт запуск
   poll();
   startPolling();
+
+  // авто-запуск при создании новой темы
+  if (new URLSearchParams(window.location.search).get('autorun') === '1') {
+    history.replaceState(null, '', window.location.pathname);
+    triggerRun();
+  }
 })();
 </script>
 
@@ -359,6 +370,20 @@
       applySort();
       updateUI();
     });
+  });
+})();
+</script>
+
+<!-- clear articles -->
+<script>
+(function() {
+  var btn = document.getElementById('clearArticlesBtn');
+  if (!btn) return;
+  var themeId = {{ theme.id | tojson }};
+  btn.addEventListener('click', function() {
+    if (!confirm('Очистить все статьи по теме «{{ theme.query }}»?')) return;
+    fetch('/themes/' + themeId + '/articles', { method: 'DELETE' })
+      .then(function(r) { if (r.ok) window.location.reload(); });
   });
 })();
 </script>

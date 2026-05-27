@@ -534,7 +534,8 @@ mark {
   gap: 0.5rem;
   margin-bottom: 0.75rem;
 }
-.articles-header .section-label { margin-bottom: 0; }
+.articles-header .section-label { margin-bottom: 0; color: var(--fg); display: flex; align-items: center; }
+.btn-xs { font-size: 0.62rem; padding: 0.18rem 0.5rem; border-radius: var(--r-xs); }
 
 .sort-bar {
   display: flex;

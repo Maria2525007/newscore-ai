@@ -14,7 +14,7 @@ import typer
 from newscore.briefing import BriefingDeps, BriefingOrchestrator
 from newscore.config import load_config
 from newscore.logging import configure
-from newscore.matcher import Bm25Matcher, EmbeddingMatcher, Matcher
+from newscore.matcher import Bm25Matcher, EmbeddingMatcher, HybridMatcher, Matcher, RerankMatcher
 from newscore.parser import FeedParser
 from newscore.repository import InMemoryRepository
 from newscore.summarizer import ExtractiveSummarizer
@@ -58,6 +58,10 @@ def _build_service(
                 matchers[name] = EmbeddingMatcher()
             elif name == "bm25":
                 matchers[name] = Bm25Matcher()
+            elif name == "hybrid":
+                matchers[name] = HybridMatcher()
+            elif name == "rerank":
+                matchers[name] = RerankMatcher()
             else:
                 raise ValueError(f"unknown matcher: {name}")
         return matchers[name]

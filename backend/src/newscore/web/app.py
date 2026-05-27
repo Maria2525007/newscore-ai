@@ -6,6 +6,7 @@
 
 from __future__ import annotations
 
+import logging
 import threading
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
@@ -38,6 +39,9 @@ STATIC_DIR = _HERE / "static"
 
 
 _running: dict[str, bool] = {}  # theme_id → выполняется прямо сейчас
+_errors: dict[str, str] = {}   # theme_id → последняя ошибка воркера
+
+_log = logging.getLogger(__name__)
 
 
 def create_app(service: ThemeService) -> FastAPI:
@@ -88,7 +92,7 @@ def create_app(service: ThemeService) -> FastAPI:
             top_n=top_n,
             days=days,
         )
-        return RedirectResponse(url=f"/themes/{theme.id}", status_code=303)
+        return RedirectResponse(url=f"/themes/{theme.id}?autorun=1", status_code=303)
 
     @app.get("/themes/{theme_id}", response_class=HTMLResponse)
     def theme_detail(theme_id: str, request: Request) -> HTMLResponse:
@@ -132,8 +136,12 @@ def create_app(service: ThemeService) -> FastAPI:
 
         def _worker() -> None:
             _running[theme_id] = True
+            _errors.pop(theme_id, None)
             try:
                 service.run_now(theme_id)
+            except Exception as exc:
+                _log.exception("run_worker_error theme_id=%s", theme_id)
+                _errors[theme_id] = str(exc)
             finally:
                 _running[theme_id] = False
 
@@ -174,11 +182,17 @@ def create_app(service: ThemeService) -> FastAPI:
         if not sentences:
             return JSONResponse({"text": ""})
 
-        n = len(articles)
-        noun = "материал" if n == 1 else ("материала" if n <= 4 else "материалов")
-        intro = f"По теме «{theme.query}» найдено {n} {noun}. "
-        text = intro + " ".join(sentences[:3])
+        text = " ".join(sentences[:3])
         return JSONResponse({"text": text})
+
+    @app.delete("/themes/{theme_id}/articles")
+    def clear_articles(theme_id: str) -> JSONResponse:
+        try:
+            service.get(theme_id)
+        except ThemeNotFound:
+            raise HTTPException(status_code=404, detail="theme not found") from None
+        service.clear_articles(theme_id)
+        return JSONResponse({"ok": True})
 
     @app.post("/themes/{theme_id}/pause")
     def pause_theme(theme_id: str) -> RedirectResponse:

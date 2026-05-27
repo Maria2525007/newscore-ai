@@ -41,7 +41,13 @@
         </span>
       </div>
       <div class="theme-card-badges">
-        <span class="badge">{{ t.matcher }}</span>
+        <span class="badge">
+          {%- if t.matcher == "rerank" -%}Макс. точность
+          {%- elif t.matcher == "hybrid" -%}Гибрид BM25 + смысл
+          {%- elif t.matcher == "embedding" -%}Умный поиск
+          {%- elif t.matcher == "bm25" -%}Поиск по словам
+          {%- else -%}{{ t.matcher }}{%- endif -%}
+        </span>
         <span class="badge">каждые
           {%- if t.period_seconds < 3600 -%}
             &nbsp;{{ (t.period_seconds // 60) }}м

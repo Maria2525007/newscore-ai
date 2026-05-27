@@ -193,6 +193,21 @@ class ThemeService:
 
     # ---- Run / delta -----------------------------------------------------
 
+    def clear_articles(self, theme_id: str) -> None:
+        conn = self._conn()
+        conn.execute("BEGIN IMMEDIATE")
+        try:
+            conn.execute("DELETE FROM articles WHERE theme_id = ?", (theme_id,))
+            conn.execute(
+                "UPDATE themes SET last_run_id = NULL WHERE id = ?", (theme_id,)
+            )
+            conn.execute("DELETE FROM runs WHERE theme_id = ?", (theme_id,))
+            conn.execute("COMMIT")
+        except Exception:
+            conn.execute("ROLLBACK")
+            raise
+        log.info("articles_cleared", theme_id=theme_id)
+
     def due_themes(self, now: datetime | None = None) -> list[Theme]:
         ts = dt_to_iso(now or _now())
         rows = self._conn().execute(
