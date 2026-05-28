@@ -362,13 +362,13 @@ class RerankMatcher:
     """
 
     name = "rerank"
-    version = "bge-reranker-v2-m3@0.1"
+    version = "bge-reranker-base@0.1"
 
     def __init__(
         self,
         base: "Matcher | None" = None,
         n_candidates: int = 50,
-        model_name: str = "BAAI/bge-reranker-v2-m3",
+        model_name: str = "BAAI/bge-reranker-base",
         max_length: int = 512,
         body_chars: int = 1500,
         batch_size: int = 16,

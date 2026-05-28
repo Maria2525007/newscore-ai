@@ -24,12 +24,12 @@ def get_st_model(name: str) -> "SentenceTransformer":
 
 
 def get_reranker_model(
-    name: str = "BAAI/bge-reranker-v2-m3",
+    name: str = "BAAI/bge-reranker-base",
     max_length: int = 512,
 ) -> "CrossEncoder":
     """Lazy-load cross-encoder reranker.
 
-    BAAI/bge-reranker-v2-m3: Apache-2.0, 568M, multilingual (100+ языков).
+    BAAI/bge-reranker-base: Apache-2.0, 568M, multilingual (100+ языков).
     RusBEIR (Kovalev 2025, doc-001 Table 3): BM25+BGE-reranker +7.71 п.п.
     nDCG@10 avg vs BM25 alone. T²-RAGBench (Akarsu 2026, doc-002 Table I):
     Hybrid+Rerank R@5=0.816 vs Hybrid alone 0.695 (+17.4 п.п.).
