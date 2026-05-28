@@ -1,0 +1,1116 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Новостной ИИ Агент — ИТМО Стартап-трек 2026</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root {
+  --navy-deep: #0A1929;
+  --navy-mid:  #152338;
+  --blue-accent: #2979FF;
+  --blue-bright: #5C9FFF;
+  --green-ok:  #00C853;
+  --red-risk:  #FF4444;
+  --yellow-risk:#FFB300;
+  --warm-white:#F8F9FA;
+  --muted:     rgba(248,249,250,0.55);
+  --glass:     rgba(255,255,255,0.055);
+  --glass-b:   rgba(255,255,255,0.10);
+  --light-bg:  #F2F5F9;
+  --dark-text: #0D1B2A;
+  --dark-mid:  #2D3748;
+  --dark-muted:#718096;
+}
+
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{
+  font-family:'Inter',sans-serif;
+  background:var(--navy-deep);
+  overflow:hidden;
+  width:100vw;height:100vh;
+}
+
+/* ── CHROME ─────────────────────────────── */
+#progress-bar{
+  position:fixed;top:0;left:0;height:2px;
+  background:var(--blue-accent);
+  transition:width .4s ease;
+  z-index:1000;
+  box-shadow:0 0 10px rgba(41,121,255,.6);
+}
+#counter{
+  position:fixed;bottom:22px;right:28px;
+  font-size:12px;font-weight:500;letter-spacing:.08em;
+  color:rgba(255,255,255,.3);z-index:1000;
+  transition:color .3s;
+}
+#counter.lm{color:rgba(0,0,0,.25)}
+#nav-dots{
+  position:fixed;bottom:22px;left:50%;transform:translateX(-50%);
+  display:flex;gap:5px;z-index:1000;
+}
+.dot{
+  width:5px;height:5px;border-radius:50%;
+  background:rgba(255,255,255,.22);cursor:pointer;
+  transition:all .3s;
+}
+.dot.on{background:var(--blue-accent);width:18px;border-radius:3px}
+
+/* ── SLIDES ──────────────────────────────── */
+#wrap{position:relative;width:100vw;height:100vh}
+
+.slide{
+  position:absolute;inset:0;
+  display:flex;flex-direction:column;
+  justify-content:center;align-items:center;
+  padding:52px 80px;
+  opacity:0;transform:translateY(28px);
+  transition:opacity .45s ease,transform .45s ease;
+  pointer-events:none;overflow:hidden;
+}
+.slide.on{opacity:1;transform:translateY(0);pointer-events:all}
+.dk{background:var(--navy-deep);color:var(--warm-white)}
+.lt{background:var(--light-bg);color:var(--dark-text)}
+
+/* BG elements */
+.grid-bg{
+  position:absolute;inset:0;pointer-events:none;
+  background-image:
+    linear-gradient(rgba(41,121,255,.045) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(41,121,255,.045) 1px,transparent 1px);
+  background-size:56px 56px;
+}
+.orb{
+  position:absolute;border-radius:50%;filter:blur(90px);pointer-events:none;
+  animation:ob 9s ease-in-out infinite;
+}
+.o1{width:480px;height:480px;background:radial-gradient(circle,rgba(41,121,255,.22) 0%,transparent 70%);top:-120px;right:-80px}
+.o2{width:320px;height:320px;background:radial-gradient(circle,rgba(0,200,83,.10) 0%,transparent 70%);bottom:-80px;left:-60px;animation-delay:4s}
+@keyframes ob{0%,100%{transform:translate(0,0) scale(1)}50%{transform:translate(18px,-25px) scale(1.06)}}
+
+/* ── TYPE ────────────────────────────────── */
+.hero{
+  font-family:'Inter',sans-serif;
+  font-size:clamp(56px,7.5vw,100px);
+  font-weight:800;letter-spacing:-.025em;line-height:1;
+  background:linear-gradient(140deg,#fff 40%,var(--blue-bright) 100%);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+}
+.h1{
+  font-family:'Inter',sans-serif;
+  font-size:clamp(26px,3.2vw,40px);
+  font-weight:700;letter-spacing:-.018em;line-height:1.15;
+}
+.h1.dk-g{
+  background:linear-gradient(140deg,#fff 55%,var(--blue-bright) 100%);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+}
+.label{
+  font-size:10px;font-weight:700;letter-spacing:.12em;
+  text-transform:uppercase;color:var(--blue-accent);margin-bottom:7px;
+  font-family:'Inter',sans-serif;
+}
+.body{font-size:14px;line-height:1.75;font-weight:400}
+.muted{color:var(--muted)}
+.dm{color:var(--dark-muted)}
+
+/* ── GLASS CARD ─────────────────────────── */
+.gc{
+  background:var(--glass);border:1px solid var(--glass-b);
+  border-radius:14px;backdrop-filter:blur(10px);
+}
+
+/* ── TAG ────────────────────────────────── */
+.tag{
+  display:inline-flex;align-items:center;gap:5px;
+  padding:5px 13px;border-radius:100px;
+  font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;
+}
+.tag-dk{background:var(--glass);border:1px solid var(--glass-b);color:var(--warm-white)}
+.tag-bl{background:rgba(41,121,255,.18);border:1px solid rgba(41,121,255,.5);color:var(--blue-bright)}
+.tag-lt{background:rgba(41,121,255,.08);border:1px solid rgba(41,121,255,.25);color:var(--blue-accent)}
+.tag-gn{background:rgba(0,200,83,.12);border:1px solid rgba(0,200,83,.4);color:var(--green-ok)}
+
+/* ── STAT CARD ──────────────────────────── */
+.stat{text-align:center;padding:24px 16px;border-radius:16px;flex:1}
+.stat-n{
+  font-family:'Inter',sans-serif;
+  font-size:clamp(26px,3vw,38px);font-weight:800;
+  color:var(--blue-bright);line-height:1;letter-spacing:-.02em;
+}
+.stat-l{font-size:12px;color:var(--muted);margin-top:8px;line-height:1.5}
+
+/* ── PIPE ────────────────────────────────── */
+.pipe-row{display:flex;align-items:center;gap:0;width:100%;max-width:980px}
+.pipe-blk{
+  flex:1;text-align:center;padding:18px 10px;
+  background:var(--glass);border:1px solid var(--glass-b);
+  border-radius:12px;position:relative;
+}
+.pipe-blk:not(:last-child)::after{
+  content:'';
+  position:absolute;right:-13px;top:50%;transform:translateY(-50%);
+  border-top:1px solid rgba(41,121,255,.4);width:13px;
+  pointer-events:none;
+}
+.pipe-blk .arr{
+  position:absolute;right:-6px;top:50%;transform:translateY(-50%);
+  width:6px;height:6px;border-radius:50%;
+  background:var(--blue-accent);
+}
+.p-icon{margin-bottom:8px;display:flex;justify-content:center;align-items:center;height:28px}
+.p-name{font-family:'Inter',sans-serif;font-size:11px;font-weight:700;color:var(--warm-white);margin-bottom:3px}
+.p-model{font-size:9.5px;color:var(--muted);font-family:'Inter',monospace;line-height:1.5}
+
+/* ── PIPE LIGHT ────────────────────────── */
+.pipe-blk-lt{
+  flex:1;text-align:center;padding:16px 10px;
+  background:#fff;border:1px solid #D1DCE8;
+  border-radius:12px;position:relative;
+  box-shadow:0 2px 6px rgba(0,0,0,.05);
+}
+.pipe-blk-lt:not(:last-child)::after{
+  content:'';
+  position:absolute;right:-13px;top:50%;transform:translateY(-50%);
+  border-top:1px dashed rgba(41,121,255,.3);width:13px;
+}
+.p-name-lt{font-family:'Inter',sans-serif;font-size:11px;font-weight:700;color:var(--dark-text);margin-bottom:3px}
+.p-model-lt{font-size:9px;color:var(--dark-muted);font-family:'Inter',monospace;line-height:1.5}
+
+/* ── BOTTOM BAR ────────────────────────── */
+.bbar{
+  display:flex;align-items:center;justify-content:center;gap:28px;
+  padding:12px 26px;
+  background:rgba(41,121,255,.09);border:1px solid rgba(41,121,255,.22);
+  border-radius:100px;margin-top:18px;
+}
+.bbar span{font-size:12px;font-weight:600;color:var(--blue-bright)}
+.bbar-sep{color:rgba(41,121,255,.3)!important;font-weight:400!important}
+
+/* ── QUOTE ───────────────────────────────── */
+.quote{
+  font-size:14px;font-style:italic;font-weight:300;
+  color:var(--muted);border-left:2px solid var(--blue-accent);
+  padding-left:18px;line-height:1.75;max-width:680px;
+}
+
+/* ── PRICING ────────────────────────────── */
+.pricing{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;width:100%;max-width:880px}
+.pc{
+  background:var(--glass);border:1px solid var(--glass-b);
+  border-radius:14px;padding:18px 14px;text-align:center;
+}
+.pc.feat{
+  background:rgba(41,121,255,.13);border-color:var(--blue-accent);
+  position:relative;
+}
+.pc.feat::before{
+  content:'Популярный';
+  position:absolute;top:-11px;left:50%;transform:translateX(-50%);
+  background:var(--blue-accent);color:#fff;
+  font-size:9px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;
+  padding:3px 10px;border-radius:100px;white-space:nowrap;
+}
+.pc-tier{font-family:'Inter',sans-serif;font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-bottom:7px}
+.pc-amt{font-family:'Inter',sans-serif;font-size:26px;font-weight:800;color:var(--warm-white);line-height:1;letter-spacing:-.02em}
+.pc-sub{font-size:10px;color:var(--muted);margin:3px 0 8px}
+.pc-feat{font-size:11px;color:rgba(248,249,250,.6);line-height:1.6}
+
+/* ── METRIC TILE ─────────────────────────── */
+.mtile{flex:1;padding:18px 14px;background:var(--glass);border:1px solid var(--glass-b);border-radius:12px;text-align:center}
+.mb{font-family:'Inter',sans-serif;font-size:26px;font-weight:800;color:var(--blue-bright);line-height:1;letter-spacing:-.02em}
+.ml{font-size:11px;color:var(--muted);margin-top:5px}
+
+/* ── ADV TILE (light) ───────────────────── */
+.atile{flex:1;padding:18px 14px;background:#fff;border:1px solid #D1DCE8;border-radius:12px;text-align:center;box-shadow:0 2px 6px rgba(0,0,0,.04)}
+.ab{font-family:'Inter',sans-serif;font-size:24px;font-weight:800;color:var(--blue-accent);line-height:1;letter-spacing:-.02em}
+.al{font-size:11px;color:var(--dark-muted);margin-top:5px}
+
+/* ── CHECK BLOCK ─────────────────────────── */
+.chk{
+  background:#fff;border:1px solid #D1DCE8;
+  border-radius:14px;padding:24px 20px;flex:1;
+}
+.chk:hover{box-shadow:0 6px 24px rgba(41,121,255,.09);border-color:rgba(41,121,255,.3)}
+.chk-ico{
+  width:38px;height:38px;border-radius:9px;
+  display:flex;align-items:center;justify-content:center;
+  background:rgba(0,200,83,.10);margin-bottom:12px;
+}
+.chk-title{font-family:'Inter',sans-serif;font-size:14px;font-weight:700;color:var(--dark-text);margin-bottom:6px}
+.chk-sub{font-size:12px;color:var(--dark-muted);line-height:1.65}
+.mpill{
+  display:inline-flex;padding:3px 10px;
+  background:rgba(41,121,255,.08);border:1px solid rgba(41,121,255,.2);
+  border-radius:100px;font-size:11px;font-weight:600;color:var(--blue-accent);margin:2px;
+}
+
+/* ── COMP TABLE ─────────────────────────── */
+.ctab{width:100%;border-collapse:collapse;font-size:13px;max-width:860px}
+.ctab th{
+  padding:9px 14px;text-align:center;
+  font-family:'Inter',sans-serif;font-size:11px;font-weight:700;
+  letter-spacing:.06em;text-transform:uppercase;
+}
+.ctab td{padding:11px 14px;text-align:center;border-bottom:1px solid rgba(255,255,255,.07)}
+.ctab td:first-child{text-align:left;font-weight:500}
+.ctab tr.hl td{background:rgba(41,121,255,.12)}
+.ctab tr.hl td:first-child{border-left:3px solid var(--blue-accent);color:var(--blue-bright);font-weight:700}
+.yes{color:var(--green-ok);font-weight:600;font-size:11px;letter-spacing:.04em}
+.no{color:rgba(248,249,250,.25);font-size:11px}
+.hl-cell{background:rgba(41,121,255,.12)!important;border-left:2px solid var(--blue-accent)!important}
+
+/* ── TIMELINE ───────────────────────────── */
+.tl{display:flex;gap:10px;width:100%}
+.tl-phase{flex:1;padding:18px 16px;border-radius:12px;border:1px solid #D1DCE8;background:rgba(0,0,0,.02)}
+.tl-phase.cur{border-color:rgba(41,121,255,.4);background:rgba(41,121,255,.05)}
+.tl-num{font-family:'Inter',sans-serif;font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;margin-bottom:6px}
+.tl-h{font-family:'Inter',sans-serif;font-size:13px;font-weight:700;color:var(--dark-text);margin-bottom:7px}
+.tl-li{font-size:11.5px;color:var(--dark-muted);line-height:1.9;padding-left:12px}
+
+/* ── FUNNEL ─────────────────────────────── */
+.fnl{display:flex;flex-direction:column;gap:6px}
+.fstep{
+  padding:9px 16px;border-radius:8px;font-size:12px;font-weight:600;
+  text-align:center;border:1px solid #D1DCE8;background:#fff;color:var(--dark-text);
+}
+.fstep.cur{background:rgba(41,121,255,.08);border-color:rgba(41,121,255,.35);color:var(--blue-accent)}
+.fstep.done{background:rgba(0,200,83,.06);border-color:rgba(0,200,83,.35);color:var(--green-ok)}
+.farr{text-align:center;color:var(--dark-muted);font-size:12px;line-height:1}
+
+/* ── RISK ROW ───────────────────────────── */
+.rrow{
+  display:grid;grid-template-columns:26px 3fr 90px 2.5fr;
+  gap:10px 14px;align-items:start;
+  padding:14px 18px;border-radius:12px;margin-bottom:8px;
+  border:1px solid transparent;
+}
+.rh{background:rgba(255,68,68,.07);border-color:rgba(255,68,68,.18)}
+.rm{background:rgba(255,179,0,.07);border-color:rgba(255,179,0,.18)}
+.rbadge{
+  display:inline-flex;padding:3px 9px;border-radius:100px;
+  font-size:11px;font-weight:700;font-family:'Inter',sans-serif;
+}
+.rbadge.r{background:rgba(255,68,68,.18);color:var(--red-risk)}
+.rbadge.y{background:rgba(255,179,0,.13);color:var(--yellow-risk)}
+
+/* ── PERSONA ────────────────────────────── */
+.pers{background:#fff;border:1px solid #D1DCE8;border-radius:10px;padding:13px 15px;margin-bottom:8px}
+.pers:last-child{margin-bottom:0}
+.pers-n{font-family:'Inter',sans-serif;font-size:12px;font-weight:700;color:var(--dark-text);margin-bottom:2px}
+.pers-d{font-size:11px;color:var(--dark-muted)}
+
+/* ── SVG ICONS ───────────────────────────── */
+.ico{display:inline-flex;flex-shrink:0}
+.ico svg{display:block}
+
+/* ── USP BADGE ───────────────────────────── */
+.usp{
+  display:flex;align-items:center;gap:8px;
+  padding:7px 13px;background:var(--glass);border:1px solid var(--glass-b);
+  border-radius:9px;font-size:12px;font-weight:600;color:var(--warm-white);
+}
+
+/* ── CATEGORY ITEM ───────────────────────── */
+.cat{
+  display:flex;align-items:center;gap:10px;
+  padding:10px 14px;background:#fff;border:1px solid #D1DCE8;
+  border-radius:9px;margin-bottom:7px;border-left:3px solid;
+}
+.cat-txt{font-size:13px;font-weight:600;color:var(--dark-text)}
+
+/* ── MARKET TIER ────────────────────────── */
+.mkt{margin-bottom:14px}
+.mkt-row{display:flex;align-items:center;gap:14px;margin-bottom:5px}
+.mkt-n{font-family:'Inter',sans-serif;font-size:24px;font-weight:800;line-height:1;min-width:110px;letter-spacing:-.02em}
+.mkt-d{font-size:12px;color:var(--dark-muted)}
+.mkt-bar-wrap{flex:1;height:6px;background:#E2E8F0;border-radius:4px;overflow:hidden}
+.mkt-bar{height:100%;border-radius:4px;transition:width .8s ease}
+
+/* ── ANIMATIONS ───────────────────────────── */
+@keyframes fup{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+.a1{animation:fup .55s ease both .08s}
+.a2{animation:fup .55s ease both .2s}
+.a3{animation:fup .55s ease both .33s}
+.a4{animation:fup .55s ease both .46s}
+.a5{animation:fup .55s ease both .58s}
+.slide:not(.on) *{animation:none!important}
+
+/* ── PRINT ───────────────────────────────── */
+@media print{
+  body{overflow:visible}
+  #progress-bar,#counter,#nav-dots{display:none}
+  .slide{position:relative!important;opacity:1!important;transform:none!important;page-break-after:always;height:100vh}
+}
+</style>
+</head>
+<body>
+
+<!-- SVG ICON SPRITE -->
+<svg style="display:none" xmlns="http://www.w3.org/2000/svg">
+  <symbol id="i-search" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+    <circle cx="11" cy="11" r="7"/><path d="M16.5 16.5 22 22"/>
+  </symbol>
+  <symbol id="i-doc" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><polyline points="13 2 13 9 20 9"/>
+  </symbol>
+  <symbol id="i-bolt" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M13 2 3.5 13.5H12l-1 8.5 9.5-11.5H13z"/>
+  </symbol>
+  <symbol id="i-crosshair" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round">
+    <circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="4"/>
+    <line x1="12" y1="2" x2="12" y2="5"/><line x1="12" y1="19" x2="12" y2="22"/>
+    <line x1="2" y1="12" x2="5" y2="12"/><line x1="19" y1="12" x2="22" y2="12"/>
+  </symbol>
+  <symbol id="i-edit" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4z"/>
+  </symbol>
+  <symbol id="i-chart" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round">
+    <rect x="3" y="12" width="4" height="8"/><rect x="9" y="6" width="4" height="14"/><rect x="15" y="2" width="4" height="18"/>
+    <line x1="2" y1="20" x2="22" y2="20"/>
+  </symbol>
+  <symbol id="i-flask" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M9 2v7L3.5 17A2 2 0 0 0 5.27 20h13.46A2 2 0 0 0 20.5 17L15 9V2"/>
+    <line x1="8" y1="2" x2="16" y2="2"/>
+  </symbol>
+  <symbol id="i-scale" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M12 2v20M2 12h20M5 7l-3 5h6zM19 7l-3 5h6z"/>
+  </symbol>
+  <symbol id="i-trend" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+    <polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/>
+  </symbol>
+  <symbol id="i-invest" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+    <circle cx="12" cy="12" r="10"/>
+    <path d="M12 6v2m0 8v2m-4-5h8M8 9.5C8 8.1 9.8 7 12 7s4 1.1 4 2.5c0 1.8-1.8 2.4-4 2.5s-4 .7-4 2.5C8 16 9.8 17 12 17s4-1.1 4-2.5"/>
+  </symbol>
+  <symbol id="i-building" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
+    <polyline points="9 22 9 12 15 12 15 22"/>
+  </symbol>
+  <symbol id="i-grad" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M22 10v6M2 10l10-5 10 5-10 5z"/>
+    <path d="M6 12v5c3 3 9 3 12 0v-5"/>
+  </symbol>
+  <symbol id="i-star" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+    <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+  </symbol>
+  <symbol id="i-link" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/>
+    <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>
+  </symbol>
+  <symbol id="i-shield" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+    <polyline points="9 12 11 14 15 10"/>
+  </symbol>
+  <symbol id="i-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <polyline points="20 6 9 17 4 12"/>
+  </symbol>
+  <symbol id="i-x" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+    <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+  </symbol>
+  <symbol id="i-globe" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round">
+    <circle cx="12" cy="12" r="10"/>
+    <line x1="2" y1="12" x2="22" y2="12"/>
+    <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
+  </symbol>
+  <symbol id="i-terminal" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round">
+    <polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/>
+  </symbol>
+  <symbol id="i-alert" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+    <line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
+  </symbol>
+  <symbol id="i-hand" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M18 8h1a4 4 0 0 1 0 8h-1"/>
+    <path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"/>
+    <line x1="6" y1="1" x2="6" y2="4"/><line x1="10" y1="1" x2="10" y2="4"/><line x1="14" y1="1" x2="14" y2="4"/>
+  </symbol>
+  <symbol id="i-home" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
+    <polyline points="9 22 9 12 15 12 15 22"/>
+  </symbol>
+  <symbol id="i-users" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+    <circle cx="9" cy="7" r="4"/>
+    <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+    <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+  </symbol>
+</svg>
+
+<div id="progress-bar" style="width:9.09%"></div>
+<div id="counter">1 / 11</div>
+<div id="nav-dots"></div>
+
+<div id="wrap">
+
+<!-- ══ SLIDE 1 — TITLE ══════════════════════════════════════════ -->
+<div class="slide dk on" id="s1">
+  <div class="grid-bg"></div>
+  <div class="orb o1"></div>
+  <div class="orb o2"></div>
+
+  <div style="text-align:center;position:relative;z-index:1;max-width:780px">
+    <div class="hero a1" style="margin-bottom:14px">Новостной ИИ Агент</div>
+
+    <p class="a2" style="font-size:clamp(15px,1.8vw,20px);color:var(--muted);font-weight:300;letter-spacing:.01em;margin-bottom:32px">
+      Персонализированный AI-агент для деловых новостей
+    </p>
+
+    <div class="a3" style="width:1px;height:32px;background:linear-gradient(180deg,transparent,rgba(255,255,255,.15));margin:0 auto 44px"></div>
+
+    <div class="a4" style="width:1px;height:1px;margin:0"></div>
+
+    <p class="a4" style="font-size:12px;color:rgba(248,249,250,.3);letter-spacing:.1em;text-transform:uppercase;font-weight:500;margin-bottom:16px">
+      ИТМО Стартап — трек 2026
+    </p>
+
+    <p class="a5" style="font-size:12px;color:rgba(248,249,250,.22);font-weight:400;letter-spacing:.04em">
+      Махмудова&thinsp;·&thinsp;Пахомов&thinsp;·&thinsp;Григорьева&thinsp;·&thinsp;Гайнуллина&thinsp;·&thinsp;Гальченко&thinsp;·&thinsp;Метель
+    </p>
+  </div>
+</div>
+
+<!-- ══ SLIDE 2 — PROBLEM ════════════════════════════════════════ -->
+<div class="slide dk" id="s2">
+  <div class="orb o1" style="opacity:.4"></div>
+
+  <div style="width:100%;max-width:980px;position:relative;z-index:1">
+    <div class="label a1">Проблема</div>
+    <h2 class="h1 dk-g a2" style="margin-bottom:34px;max-width:620px">
+      Информационный шум<br>убивает продуктивность
+    </h2>
+
+    <div class="a3" style="display:flex;gap:14px;margin-bottom:34px">
+      <div class="gc stat">
+        <div class="stat-n">70–130</div>
+        <div class="stat-l">новостей в день<br>на одного аналитика</div>
+      </div>
+      <div class="gc stat">
+        <div class="stat-n" style="color:#FFB300">15 ч</div>
+        <div class="stat-l">в месяц теряется<br>на чтение и отсев</div>
+      </div>
+      <div class="gc stat">
+        <div class="stat-n" style="color:#FF6B6B">80%</div>
+        <div class="stat-l">новостей —<br>нерелевантный шум</div>
+      </div>
+      <div class="gc stat">
+        <div class="stat-n" style="color:var(--green-ok)">60%</div>
+        <div class="stat-l">руководителей недовольны<br>существующими агрегаторами</div>
+      </div>
+    </div>
+
+    <div class="a4 quote">
+      «Аналитик физически не может качественно обработать 100+ новостей в день.
+      Большая часть времени уходит на отсев мусора, а не на анализ важного.»
+    </div>
+  </div>
+</div>
+
+<!-- ══ SLIDE 3 — SOLUTION ═══════════════════════════════════════ -->
+<div class="slide lt" id="s3">
+  <div style="width:100%;max-width:980px">
+    <div class="label a1">Решение</div>
+    <h2 class="h1 a2" style="margin-bottom:10px;max-width:640px">
+      Новостной ИИ Агент — ваш персональный<br>агент деловых новостей
+    </h2>
+    <div class="a2" style="width:40px;height:2px;background:linear-gradient(90deg,var(--blue-accent),transparent);border-radius:2px;margin:10px 0 24px"></div>
+
+    <div class="a3" style="display:grid;grid-template-columns:1fr 1fr;gap:28px">
+      <div>
+        <p class="body" style="color:var(--dark-mid);margin-bottom:18px">
+          Автоматически собирает, фильтрует и суммаризирует новости из
+          <strong>15+ проверенных источников</strong>.
+          Персонализированный дайджест — без ручного отбора.
+        </p>
+        <div style="display:flex;gap:10px;margin-bottom:18px">
+          <div style="padding:12px 16px;background:rgba(41,121,255,.07);border:1px solid rgba(41,121,255,.2);border-radius:10px;text-align:center;flex:1">
+            <div style="font-family:'Inter',sans-serif;font-size:24px;font-weight:800;color:var(--blue-accent)">7 мин</div>
+            <div style="font-size:11px;color:var(--dark-muted);margin-top:3px">дайджест готов</div>
+          </div>
+          <div style="padding:12px 16px;background:rgba(0,200,83,.07);border:1px solid rgba(0,200,83,.3);border-radius:10px;text-align:center;flex:1">
+            <div style="font-family:'Inter',sans-serif;font-size:24px;font-weight:800;color:var(--green-ok)">12 ч</div>
+            <div style="font-size:11px;color:var(--dark-muted);margin-top:3px">экономия в месяц</div>
+          </div>
+        </div>
+        <div style="display:flex;gap:7px;flex-wrap:wrap">
+          <span class="tag tag-lt" style="font-size:10px">
+            <svg class="ico" width="12" height="12"><use href="#i-globe"/></svg>Браузер
+          </span>
+          <span class="tag tag-lt" style="font-size:10px">
+            <svg class="ico" width="12" height="12"><use href="#i-terminal"/></svg>CLI
+          </span>
+          <span style="display:inline-flex;align-items:center;padding:5px 13px;background:rgba(0,0,0,.04);border:1px solid #D1DCE8;border-radius:100px;font-size:10px;font-weight:600;letter-spacing:.05em;color:var(--dark-muted)">15+ источников</span>
+        </div>
+      </div>
+
+      <div>
+        <div class="cat" style="border-left-color:var(--blue-accent);margin-bottom:16px;padding:16px 14px">
+          <div>
+            <div style="font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--blue-accent);margin-bottom:6px">Интересы на естественном языке</div>
+            <div class="cat-txt" style="font-weight:400;font-size:13px;color:var(--dark-mid);line-height:1.65">Пользователь описывает задачи словами — система формирует индивидуальные темы без жёстких категорий</div>
+          </div>
+        </div>
+        <div class="cat" style="border-left-color:var(--green-ok);padding:16px 14px;margin-bottom:0">
+          <div>
+            <div style="font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--green-ok);margin-bottom:6px">Прозрачность источников</div>
+            <div class="cat-txt" style="font-weight:400;font-size:13px;color:var(--dark-mid);line-height:1.65">Источник и ссылка на оригинал — всегда сохраняются</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ SLIDE 4 — AI PIPELINE ════════════════════════════════════ -->
+<div class="slide dk" id="s4">
+  <div class="grid-bg" style="opacity:.45"></div>
+  <div class="orb o1" style="opacity:.35"></div>
+
+  <div style="width:100%;max-width:1020px;position:relative;z-index:1">
+    <div class="label a1">Архитектура</div>
+    <h2 class="h1 dk-g a2" style="margin-bottom:6px">5-ступенчатый AI-пайплайн</h2>
+    <p class="a2 muted" style="font-size:13px;margin-bottom:28px">Каждая новость проходит полную обработку менее чем за 8 секунд</p>
+
+    <div class="a3 pipe-row" style="gap:8px;margin-bottom:24px">
+      <div class="pipe-blk">
+        <div class="p-icon"><svg width="22" height="22" style="color:var(--blue-bright)"><use href="#i-search"/></svg></div>
+        <div class="p-name">Матчинг</div>
+        <div class="p-model">multilingual-e5-base<br>600 MB · Cosine sim</div>
+      </div>
+      <div class="pipe-blk">
+        <div class="p-icon"><svg width="22" height="22" style="color:var(--blue-bright)"><use href="#i-doc"/></svg></div>
+        <div class="p-name">BM25</div>
+        <div class="p-model">BM25Okapi<br>+ PyMorphy3</div>
+      </div>
+      <div class="pipe-blk" style="border-color:rgba(41,121,255,.55);background:rgba(41,121,255,.10)">
+        <div class="p-icon"><svg width="22" height="22" style="color:var(--blue-bright)"><use href="#i-bolt"/></svg></div>
+        <div class="p-name" style="color:var(--blue-bright)">Hybrid RRF</div>
+        <div class="p-model">Reciprocal<br>Rank Fusion</div>
+      </div>
+      <div class="pipe-blk">
+        <div class="p-icon"><svg width="22" height="22" style="color:var(--blue-bright)"><use href="#i-crosshair"/></svg></div>
+        <div class="p-name">Rerank</div>
+        <div class="p-model">bge-reranker-v2-m3<br>568 MB · Cross-enc</div>
+      </div>
+      <div class="pipe-blk" style="border-color:rgba(0,200,83,.4);background:rgba(0,200,83,.06)">
+        <div class="p-icon"><svg width="22" height="22" style="color:var(--green-ok)"><use href="#i-edit"/></svg></div>
+        <div class="p-name" style="color:var(--green-ok)">Summary</div>
+        <div class="p-model">e5-base extractive<br>топ-3 предложения</div>
+      </div>
+    </div>
+
+    <div class="a4" style="display:flex;justify-content:center">
+      <div class="bbar">
+        <svg width="14" height="14" style="color:var(--blue-bright)"><use href="#i-home"/></svg>
+        <span>Всё локально</span>
+        <span class="bbar-sep">·</span>
+        <span>Без дорогих API</span>
+        <span class="bbar-sep">·</span>
+        <span>&lt;8 сек/статью</span>
+        <span class="bbar-sep">·</span>
+        <svg width="14" height="14" style="color:var(--blue-bright)"><use href="#i-shield"/></svg>
+        <span>&gt;98% точность</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ SLIDE 5 — MARKET ══════════════════════════════════════════ -->
+<div class="slide lt" id="s5">
+  <div style="width:100%;max-width:980px">
+    <div class="label a1">Рынок</div>
+    <h2 class="h1 a2" style="margin-bottom:28px">Рынок деловых новостей РФ:<br>огромный и растущий</h2>
+
+    <div class="a3" style="display:grid;grid-template-columns:1fr 1fr;gap:36px;align-items:start">
+      <!-- TAM/SAM/SOM bars -->
+      <div>
+        <p style="font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--dark-muted);margin-bottom:16px">Объём рынка</p>
+
+        <div class="mkt">
+          <div class="mkt-row">
+            <div class="mkt-n" style="color:var(--blue-accent)">~15 млрд</div>
+            <div style="flex:1">
+              <div class="mkt-bar-wrap">
+                <div class="mkt-bar" style="width:100%;background:var(--blue-accent)"></div>
+              </div>
+            </div>
+          </div>
+          <div style="display:flex;align-items:center;gap:8px">
+            <span style="font-family:'Inter',sans-serif;font-size:11px;font-weight:700;color:var(--blue-accent);letter-spacing:.06em">TAM</span>
+            <span class="mkt-d">Весь рынок цифровых деловых медиа РФ</span>
+          </div>
+        </div>
+
+        <div class="mkt">
+          <div class="mkt-row">
+            <div class="mkt-n" style="color:#1A56DB">~3 млрд</div>
+            <div style="flex:1">
+              <div class="mkt-bar-wrap">
+                <div class="mkt-bar" style="width:62%;background:#1A56DB"></div>
+              </div>
+            </div>
+          </div>
+          <div style="display:flex;align-items:center;gap:8px">
+            <span style="font-family:'Inter',sans-serif;font-size:11px;font-weight:700;color:#1A56DB;letter-spacing:.06em">SAM</span>
+            <span class="mkt-d">Платные подписки на деловой контент</span>
+          </div>
+        </div>
+
+        <div class="mkt" style="margin-bottom:0">
+          <div class="mkt-row">
+            <div class="mkt-n" style="color:var(--green-ok)">~300 млн</div>
+            <div style="flex:1">
+              <div class="mkt-bar-wrap">
+                <div class="mkt-bar" style="width:20%;background:var(--green-ok)"></div>
+              </div>
+            </div>
+          </div>
+          <div style="display:flex;align-items:center;gap:8px">
+            <span style="font-family:'Inter',sans-serif;font-size:11px;font-weight:700;color:var(--green-ok);letter-spacing:.06em">SOM</span>
+            <span class="mkt-d">Достижимая доля за 3 года (10% от SAM)</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Personas -->
+      <div>
+        <p style="font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--dark-muted);margin-bottom:12px">Целевая аудитория</p>
+        <div class="pers">
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:3px">
+            <svg width="16" height="16" style="color:var(--blue-accent)"><use href="#i-invest"/></svg>
+            <span class="pers-n">Частные инвесторы / трейдеры</span>
+          </div>
+          <p class="pers-d">25–45 лет · доход от 100 тыс. ₽ · высокая потребность в оперативной аналитике</p>
+        </div>
+        <div class="pers">
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:3px">
+            <svg width="16" height="16" style="color:var(--blue-accent)"><use href="#i-building"/></svg>
+            <span class="pers-n">Владельцы МСБ</span>
+          </div>
+          <p class="pers-d">30–55 лет · следят за регуляторикой и конкурентами · ценят время</p>
+        </div>
+        <div class="pers">
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:3px">
+            <svg width="16" height="16" style="color:var(--blue-accent)"><use href="#i-chart"/></svg>
+            <span class="pers-n">Корпоративные аналитики и топ-менеджеры</span>
+          </div>
+          <p class="pers-d">B2B-сегмент · стратегические решения · корпоративные подписки</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="a4" style="margin-top:18px;padding:10px 22px;background:rgba(41,121,255,.06);border:1px solid rgba(41,121,255,.18);border-radius:100px;display:inline-flex;gap:8px;align-items:center;width:100%;justify-content:center">
+      <svg width="14" height="14" style="color:var(--blue-accent)"><use href="#i-users"/></svg>
+      <span style="font-family:'Inter',sans-serif;font-size:14px;font-weight:700;color:var(--dark-text)">25 млн</span>
+      <span style="font-size:13px;color:var(--dark-muted)">активных читателей делового контента в России</span>
+    </div>
+  </div>
+</div>
+
+<!-- ══ SLIDE 6 — BUSINESS MODEL ════════════════════════════════ -->
+<div class="slide dk" id="s6">
+  <div class="orb o1" style="opacity:.28"></div>
+  <div style="width:100%;max-width:900px;position:relative;z-index:1">
+    <div class="label a1">Бизнес-модель</div>
+    <h2 class="h1 dk-g a2" style="margin-bottom:22px">Монетизация и юнит-экономика</h2>
+
+    <div class="pricing a3">
+      <div class="pc">
+        <div class="pc-tier">Trial</div>
+        <div class="pc-amt">0 <span style="font-size:16px">₽</span></div>
+        <div class="pc-sub">7 дней</div>
+        <div class="pc-feat">Базовый доступ<br>Без архива</div>
+      </div>
+      <div class="pc feat">
+        <div class="pc-tier" style="color:var(--blue-bright)">Personal</div>
+        <div class="pc-amt">790 <span style="font-size:16px">₽</span></div>
+        <div class="pc-sub">в месяц</div>
+        <div class="pc-feat" style="color:rgba(248,249,250,.75)">5 категорий<br>Безлимит + архив</div>
+      </div>
+      <div class="pc">
+        <div class="pc-tier">Team</div>
+        <div class="pc-amt" style="font-size:20px">~6 000 <span style="font-size:13px">₽</span></div>
+        <div class="pc-sub">в месяц</div>
+        <div class="pc-feat">До 10 пользователей<br>Дашборд</div>
+      </div>
+      <div class="pc">
+        <div class="pc-tier">Enterprise</div>
+        <div class="pc-amt" style="font-size:20px">Custom</div>
+        <div class="pc-sub">индивидуально</div>
+        <div class="pc-feat">API + White-label<br>SLA</div>
+      </div>
+    </div>
+
+    <div class="a4" style="display:flex;gap:10px;margin-top:12px">
+      <div class="mtile">
+        <div class="mb">~250 ₽</div>
+        <div class="ml">себестоимость / мес</div>
+      </div>
+      <div class="mtile">
+        <div class="mb" style="color:var(--green-ok)">~68%</div>
+        <div class="ml">валовая маржа</div>
+      </div>
+      <div class="mtile">
+        <div class="mb" style="color:#FFB300">0.7×</div>
+        <div class="ml">LTV / CAC</div>
+      </div>
+      <div class="mtile" style="flex:2;text-align:left;padding:16px 18px">
+        <div style="font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-bottom:8px">Стратегия запуска</div>
+        <div style="font-size:11.5px;color:rgba(248,249,250,.65);line-height:1.75">
+          Web-first · Product-Led Growth<br>
+          Freemium → органический рост (SEO)<br>
+          Масштабирование через B2B
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ SLIDE 7 — TRACTION ════════════════════════════════════════ -->
+<div class="slide lt" id="s7">
+  <div style="width:100%;max-width:980px">
+    <div class="label a1">Трекшн и валидация</div>
+    <h2 class="h1 a2" style="margin-bottom:28px">Доверие экспертов<br>и первые результаты</h2>
+
+    <div class="a3" style="display:flex;gap:14px;margin-bottom:20px">
+      <div class="chk">
+        <div class="chk-ico">
+          <svg width="20" height="20" style="color:var(--green-ok)"><use href="#i-building"/></svg>
+        </div>
+        <div class="chk-title">Якорный клиент</div>
+        <div class="chk-sub">
+          <strong>Евразийское рейтинговое агентство</strong><br>
+          Стратегическое партнёрство с этапа концепции. Уникальный экспертный контент.
+        </div>
+      </div>
+      <div class="chk">
+        <div class="chk-ico">
+          <svg width="20" height="20" style="color:var(--green-ok)"><use href="#i-grad"/></svg>
+        </div>
+        <div class="chk-title">Академическая валидация</div>
+        <div class="chk-sub">
+          <strong>Университет ИТМО, ФТМИ</strong><br>
+          Экспертная оценка архитектуры. Поддержка в подборе AI-моделей.
+        </div>
+      </div>
+      <div class="chk">
+        <div class="chk-ico">
+          <svg width="20" height="20" style="color:var(--green-ok)"><use href="#i-chart"/></svg>
+        </div>
+        <div class="chk-title">Измеримая ценность</div>
+        <div class="chk-sub" style="margin-bottom:10px">Подтверждённые метрики качества системы</div>
+        <div>
+          <span class="mpill">−12 ч/мес</span>
+          <span class="mpill">&gt;98% точность</span>
+          <span class="mpill">&lt;8 сек</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="a4" style="display:flex;justify-content:center">
+      <div style="display:inline-flex;align-items:center;gap:9px;padding:9px 20px;background:#fff;border:1px solid #D1DCE8;border-radius:100px;box-shadow:0 2px 8px rgba(0,0,0,.05)">
+        <svg width="14" height="14" style="color:var(--blue-accent)"><use href="#i-link"/></svg>
+        <span style="font-size:13px;font-weight:600;color:var(--dark-text)">Открытый репозиторий на GitHub</span>
+        <span style="font-size:11px;color:var(--dark-muted)">— код доступен для аудита</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ SLIDE 8 — COMPETITIVE ════════════════════════════════════ -->
+<div class="slide dk" id="s8">
+  <div class="orb o2" style="opacity:.35"></div>
+  <div style="width:100%;max-width:1060px;position:relative;z-index:1">
+    <div class="label a1">Конкурентный анализ</div>
+    <div class="a2" style="display:flex;align-items:baseline;gap:16px;margin-bottom:20px">
+      <h2 class="h1 dk-g" style="flex-shrink:0">Конкурентный анализ</h2>
+      <span style="font-size:14px;font-style:italic;color:var(--muted);font-weight:300">«Мы не заменяем источники — мы работаем поверх них»</span>
+    </div>
+
+    <div class="a3">
+      <table class="ctab" style="font-size:12px">
+        <thead>
+          <tr>
+            <th style="text-align:left;color:var(--muted);width:22%">Критерий</th>
+            <th style="color:var(--muted)">РБК / Дзен</th>
+            <th style="color:var(--muted)">Telegram</th>
+            <th style="color:var(--muted)">ChatGPT</th>
+            <th style="color:var(--muted)">Agentic News</th>
+            <th style="color:var(--blue-bright);background:rgba(41,121,255,.08)">Новостной ИИ Агент</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td style="color:var(--muted)">Фильтрация под пользователя</td>
+            <td><span class="no">Нет</span></td>
+            <td><span style="color:#FFB300;font-size:11px;font-weight:600">Частично</span></td>
+            <td><span class="yes">Да</span></td>
+            <td><span class="yes">Да</span></td>
+            <td class="hl-cell"><span class="yes">По промпту</span></td>
+          </tr>
+          <tr>
+            <td style="color:var(--muted)">Умная категоризация</td>
+            <td><span class="no">Нет</span></td>
+            <td><span class="no">Нет</span></td>
+            <td><span style="color:#FFB300;font-size:11px;font-weight:600">Общая</span></td>
+            <td><span class="yes">Да</span></td>
+            <td class="hl-cell"><span class="yes">Автоматически</span></td>
+          </tr>
+          <tr>
+            <td style="color:var(--muted)">Работа в фоне (агент)</td>
+            <td><span class="no">Нет</span></td>
+            <td><span class="no">Нет</span></td>
+            <td><span class="no">Нет</span></td>
+            <td><span class="yes">Да</span></td>
+            <td class="hl-cell"><span class="yes">Уникально</span></td>
+          </tr>
+          <tr>
+            <td style="color:var(--muted)">Регулярный дайджест</td>
+            <td><span class="no">Нет</span></td>
+            <td><span style="color:#FFB300;font-size:11px;font-weight:600">Ручной</span></td>
+            <td><span class="no">Нет</span></td>
+            <td><span class="yes">Да</span></td>
+            <td class="hl-cell"><span class="yes">Настраиваемый</span></td>
+          </tr>
+          <tr>
+            <td style="color:var(--muted)">Цена</td>
+            <td style="color:var(--muted);font-size:11px">Бесплатно</td>
+            <td style="color:var(--muted);font-size:11px">Бесплатно</td>
+            <td style="color:var(--muted);font-size:11px">~2 000 ₽</td>
+            <td style="color:var(--muted);font-size:11px">~$20–50/мес</td>
+            <td class="hl-cell" style="color:var(--green-ok);font-weight:700;font-size:12px">790 ₽/мес</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="a4" style="margin-top:12px;padding:11px 18px;background:rgba(41,121,255,.09);border:1px solid rgba(41,121,255,.25);border-radius:10px">
+      <span style="font-size:12px;color:rgba(248,249,250,.8)">
+        <strong style="color:var(--blue-bright)">Вывод:</strong> Единственный продукт с агентом в фоне на российском рынке по доступной цене
+      </span>
+    </div>
+  </div>
+</div>
+
+<!-- ══ SLIDE 9 — GO-TO-MARKET ═══════════════════════════════════ -->
+<div class="slide lt" id="s9">
+  <div style="width:100%;max-width:980px">
+    <div class="label a1">Стратегия выхода</div>
+    <h2 class="h1 a2" style="margin-bottom:28px">Как мы завоёвываем рынок:<br>Enterprise-first</h2>
+
+    <div class="a3" style="display:grid;grid-template-columns:5fr 3fr;gap:28px;align-items:start">
+      <div class="tl">
+        <div class="tl-phase cur">
+          <div class="tl-num" style="color:var(--blue-accent)">Этап 1 · 0–6 мес · Текущий</div>
+          <div class="tl-h">Запуск с якорным клиентом</div>
+          <ul class="tl-li">
+            <li>Пилот для Евразийского РА</li>
+            <li>Сбор обратной связи</li>
+            <li>Публикация кейса</li>
+          </ul>
+        </div>
+        <div class="tl-phase">
+          <div class="tl-num" style="color:var(--dark-muted)">Этап 2 · 6–12 мес</div>
+          <div class="tl-h">Масштабирование</div>
+          <ul class="tl-li">
+            <li>Прямые продажи в консалтинг</li>
+            <li>Контент-маркетинг, SEO</li>
+            <li>Партнёрства с бизнес-медиа</li>
+          </ul>
+        </div>
+        <div class="tl-phase">
+          <div class="tl-num" style="color:var(--dark-muted)">Этап 3 · 12–24 мес</div>
+          <div class="tl-h">Массовый B2C</div>
+          <ul class="tl-li">
+            <li>Performance-маркетинг</li>
+            <li>Реферальная программа</li>
+            <li>Интеграции с бизнес-инструментами</li>
+          </ul>
+        </div>
+      </div>
+
+      <div>
+        <p style="font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--dark-muted);margin-bottom:12px">Воронка Enterprise-продаж</p>
+        <div class="fnl">
+          <div class="fstep cur">Демо</div>
+          <div class="farr">↓</div>
+          <div class="fstep">2-недельный пилот</div>
+          <div class="farr">↓</div>
+          <div class="fstep">Кастомизация</div>
+          <div class="farr">↓</div>
+          <div class="fstep done">Годовой контракт</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ SLIDE 10 — RISKS ══════════════════════════════════════════ -->
+<div class="slide dk" id="s10">
+  <div class="orb o1" style="opacity:.25"></div>
+  <div style="width:100%;max-width:900px;position:relative;z-index:1">
+    <div class="label a1">Управление рисками</div>
+    <h2 class="h1 dk-g a2" style="margin-bottom:6px">FMEA-анализ ключевых рисков</h2>
+    <p class="a2 muted" style="font-size:13px;margin-bottom:22px">Видим риски заранее — и знаем, как ими управлять</p>
+
+    <div class="a3" style="margin-bottom:6px;display:grid;grid-template-columns:26px 3fr 90px 2.5fr;gap:6px 12px;padding:0 18px">
+      <div></div>
+      <div style="font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)">Риск</div>
+      <div style="font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);text-align:center">RPN</div>
+      <div style="font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)">Ключевые меры</div>
+    </div>
+
+    <div class="a4">
+      <div class="rrow rh">
+        <div><svg width="18" height="18" style="color:var(--red-risk)"><use href="#i-alert"/></svg></div>
+        <div>
+          <div style="font-weight:600;font-size:13px;color:var(--warm-white);margin-bottom:2px">Высокий CAC</div>
+          <div style="font-size:11px;color:var(--muted)">Дорогое привлечение на тариф 790 ₽</div>
+        </div>
+        <div style="text-align:center"><span class="rbadge r">320</span></div>
+        <div style="font-size:11px;color:rgba(248,249,250,.6);line-height:1.7">Органический рост · Годовые тарифы со скидкой · Таргет на «горячие» запросы</div>
+      </div>
+
+      <div class="rrow rh">
+        <div><svg width="18" height="18" style="color:var(--red-risk)"><use href="#i-alert"/></svg></div>
+        <div>
+          <div style="font-weight:600;font-size:13px;color:var(--warm-white);margin-bottom:2px">Слабая дифференциация</div>
+          <div style="font-size:11px;color:var(--muted)">Конкуренция с Telegram-каналами</div>
+        </div>
+        <div style="text-align:center"><span class="rbadge r">315</span></div>
+        <div style="font-size:11px;color:rgba(248,249,250,.6);line-height:1.7">Фокус на регуляторике · Демонстрация «до/после» · Уникальные списки наблюдения</div>
+      </div>
+
+      <div class="rrow rm">
+        <div><svg width="18" height="18" style="color:var(--yellow-risk)"><use href="#i-alert"/></svg></div>
+        <div>
+          <div style="font-weight:600;font-size:13px;color:var(--warm-white);margin-bottom:2px">Усталость от уведомлений</div>
+          <div style="font-size:11px;color:var(--muted)">Низкая релевантность → отток</div>
+        </div>
+        <div style="text-align:center"><span class="rbadge y">252</span></div>
+        <div style="font-size:11px;color:rgba(248,249,250,.6);line-height:1.7">Обратная связь по ложным срабатываниям · Быстрая отписка · Дообучение</div>
+      </div>
+    </div>
+
+    <div class="a5" style="margin-top:16px;text-align:center;padding:11px 22px;background:rgba(0,200,83,.07);border:1px solid rgba(0,200,83,.22);border-radius:10px">
+      <span style="font-size:12px;color:var(--green-ok);font-weight:600">
+        Цель: снизить RPN топ-рисков на 40% за 6 месяцев
+      </span>
+    </div>
+  </div>
+</div>
+
+<!-- ══ SLIDE 11 — TECH STACK ═════════════════════════════════════ -->
+<div class="slide lt" id="s11">
+  <div style="width:100%;max-width:980px">
+    <div class="label a1">Технологический стек</div>
+    <h2 class="h1 a2" style="margin-bottom:8px">Гибридный поиск без дорогих API</h2>
+    <div class="a2" style="width:40px;height:2px;background:linear-gradient(90deg,var(--blue-accent),transparent);border-radius:2px;margin:10px 0 22px"></div>
+
+    <div class="a3" style="display:flex;gap:8px;margin-bottom:20px;align-items:stretch">
+      <div class="pipe-blk-lt">
+        <div class="p-icon" style="height:26px"><svg width="20" height="20" style="color:var(--blue-accent)"><use href="#i-search"/></svg></div>
+        <div class="p-name-lt">Матчинг</div>
+        <div class="p-model-lt">multilingual-e5-base<br>600 MB<br>Cosine similarity</div>
+      </div>
+      <div class="pipe-blk-lt">
+        <div class="p-icon" style="height:26px"><svg width="20" height="20" style="color:var(--blue-accent)"><use href="#i-doc"/></svg></div>
+        <div class="p-name-lt">BM25</div>
+        <div class="p-model-lt">BM25Okapi + PyMorphy3<br>Лемматизация<br>Буст заголовков ×3</div>
+      </div>
+      <div class="pipe-blk-lt" style="border-color:rgba(41,121,255,.35);background:rgba(41,121,255,.04)">
+        <div class="p-icon" style="height:26px"><svg width="20" height="20" style="color:var(--blue-accent)"><use href="#i-bolt"/></svg></div>
+        <div class="p-name-lt" style="color:var(--blue-accent)">Hybrid RRF</div>
+        <div class="p-model-lt">Reciprocal Rank Fusion<br>BM25 + embedding<br>Ранговое слияние</div>
+      </div>
+      <div class="pipe-blk-lt">
+        <div class="p-icon" style="height:26px"><svg width="20" height="20" style="color:var(--blue-accent)"><use href="#i-crosshair"/></svg></div>
+        <div class="p-name-lt">Rerank</div>
+        <div class="p-model-lt">bge-reranker-v2-m3<br>568 MB<br>Cross-encoder</div>
+      </div>
+      <div class="pipe-blk-lt" style="border-color:rgba(0,200,83,.35);background:rgba(0,200,83,.03)">
+        <div class="p-icon" style="height:26px"><svg width="20" height="20" style="color:var(--green-ok)"><use href="#i-edit"/></svg></div>
+        <div class="p-name-lt" style="color:var(--green-ok)">Summary</div>
+        <div class="p-model-lt">e5-base extractive<br>топ-3 предложения<br>без LLM API</div>
+      </div>
+    </div>
+
+    <div class="a4" style="display:flex;gap:10px">
+      <div class="atile">
+        <svg width="20" height="20" style="color:var(--blue-accent);margin-bottom:6px"><use href="#i-home"/></svg>
+        <div class="ab" style="font-size:18px">Локально</div>
+        <div class="al">Нет внешних зависимостей</div>
+      </div>
+      <div class="atile">
+        <div class="ab">150 ₽</div>
+        <div style="font-family:'Inter',sans-serif;font-size:12px;font-weight:700;color:var(--dark-text);margin-top:4px">в месяц</div>
+        <div class="al">себестоимость на пользователя</div>
+      </div>
+      <div class="atile">
+        <div class="ab">&lt;8 с</div>
+        <div style="font-family:'Inter',sans-serif;font-size:12px;font-weight:700;color:var(--dark-text);margin-top:4px">на статью</div>
+        <div class="al">полный цикл обработки</div>
+      </div>
+      <div class="atile">
+        <div class="ab">&gt;98%</div>
+        <div style="font-family:'Inter',sans-serif;font-size:12px;font-weight:700;color:var(--dark-text);margin-top:4px">точность</div>
+        <div class="al">релевантности запросов</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+</div><!-- /wrap -->
+
+<script>
+const slides = Array.from(document.querySelectorAll('.slide'));
+const TOTAL = slides.length;
+const bar = document.getElementById('progress-bar');
+const cnt = document.getElementById('counter');
+const dots = document.getElementById('nav-dots');
+let cur = 0;
+
+slides.forEach((_,i) => {
+  const d = document.createElement('div');
+  d.className = 'dot' + (i===0?' on':'');
+  d.onclick = () => go(i);
+  dots.appendChild(d);
+});
+
+function go(n) {
+  if (n<0||n>=TOTAL) return;
+  slides[cur].classList.remove('on');
+  cur = n;
+  slides[cur].classList.add('on');
+  const isLt = slides[cur].classList.contains('lt');
+  bar.style.width = ((cur+1)/TOTAL*100).toFixed(2)+'%';
+  cnt.textContent = (cur+1)+' / '+TOTAL;
+  cnt.className = isLt ? 'lm' : '';
+  dots.querySelectorAll('.dot').forEach((d,i) => {
+    d.classList.toggle('on', i===cur);
+    d.style.background = i===cur
+      ? 'var(--blue-accent)'
+      : isLt ? 'rgba(0,0,0,.18)' : 'rgba(255,255,255,.22)';
+  });
+}
+
+document.addEventListener('keydown', e => {
+  if (e.key==='ArrowRight'||e.key==='ArrowDown'||e.key===' ') { e.preventDefault(); go(cur+1); }
+  else if (e.key==='ArrowLeft'||e.key==='ArrowUp') { e.preventDefault(); go(cur-1); }
+  else if (e.key==='Home') go(0);
+  else if (e.key==='End') go(TOTAL-1);
+});
+
+let tx=0;
+document.addEventListener('touchstart', e => { tx=e.touches[0].clientX; }, {passive:true});
+document.addEventListener('touchend', e => {
+  const d = tx - e.changedTouches[0].clientX;
+  if (Math.abs(d)>50) go(cur+(d>0?1:-1));
+}, {passive:true});
+</script>
+</body>
+</html>
