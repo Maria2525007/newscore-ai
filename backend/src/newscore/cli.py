@@ -77,6 +77,7 @@ def web_cmd(
         Path("configs/sources.yaml"), "--config", "-c", exists=True
     ),
     log_level: str = typer.Option("INFO", "--log-level"),
+    default_matcher: str = typer.Option("rerank", "--default-matcher"),
 ) -> None:
     """Запустить web-интерфейс в браузере (Step 2)."""
     import uvicorn
@@ -85,7 +86,7 @@ def web_cmd(
 
     configure(level=log_level, fmt="console")
     service = _build_service(db, config)
-    app_ = create_app(service)
+    app_ = create_app(service, default_matcher=default_matcher)
     uvicorn.run(app_, host=host, port=port, log_level=log_level.lower())
 
 

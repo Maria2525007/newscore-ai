@@ -44,7 +44,7 @@ _errors: dict[str, str] = {}   # theme_id → последняя ошибка в
 _log = logging.getLogger(__name__)
 
 
-def create_app(service: ThemeService) -> FastAPI:
+def create_app(service: ThemeService, default_matcher: str = "rerank") -> FastAPI:
     app = FastAPI(title="NewsCore AI")
     templates = Jinja2Templates(directory=str(TEMPLATES_DIR))
     templates.env.filters["msk"] = _to_msk
@@ -64,18 +64,14 @@ def create_app(service: ThemeService) -> FastAPI:
     @app.get("/themes/new", response_class=HTMLResponse)
     def new_form(request: Request) -> HTMLResponse:
         return templates.TemplateResponse(
-            request, "new.html", {"now": datetime.now(timezone.utc)}
+            request, "new.html", {"now": datetime.now(timezone.utc), "default_matcher": default_matcher}
         )
 
     @app.post("/themes")
     def create_theme(
         query: str = Form(..., min_length=1, max_length=500),
         period: str = Form("1h"),
-        # Default = rerank: hybrid (BM25+e5 RRF k=60) → bge-reranker-v2-m3
-        # cross-encoder. На T²-RAGBench (Akarsu 2026): +17.4 п.п. R@5
-        # vs hybrid alone, +39.7% MRR@3. RusBEIR (Kovalev 2025): +7.71 п.п.
-        # nDCG@10 vs BM25 alone. На холодном старте качает ~570 MB модели.
-        matcher: str = Form("rerank"),
+        matcher: str = Form(default_matcher),
         top_n: int = Form(10),
         days: int = Form(7),
     ) -> RedirectResponse:

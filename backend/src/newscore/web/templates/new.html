@@ -32,10 +32,10 @@
           <span class="form-hint">rerank — макс. точность, embedding — быстрее</span>
         </label>
         <select class="form-select" id="matcher" name="matcher">
-          <option value="rerank" selected>Максимальная точность (rerank)</option>
-          <option value="hybrid">Гибрид BM25 + смысл (hybrid)</option>
-          <option value="embedding">Быстрый умный поиск (embedding)</option>
-          <option value="bm25">Поиск по словам (bm25)</option>
+          <option value="rerank" {% if default_matcher == "rerank" %}selected{% endif %}>Максимальная точность</option>
+          <option value="hybrid" {% if default_matcher == "hybrid" %}selected{% endif %}>Гибрид BM25 + смысл</option>
+          <option value="embedding" {% if default_matcher == "embedding" %}selected{% endif %}>Умный поиск</option>
+          <option value="bm25" {% if default_matcher == "bm25" %}selected{% endif %}>Поиск по словам</option>
         </select>
       </div>
     </div>
