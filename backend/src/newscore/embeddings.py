@@ -24,7 +24,7 @@ def get_st_model(name: str) -> "SentenceTransformer":
 
 
 def get_reranker_model(
-    name: str = "BAAI/bge-reranker-base",
+    name: str = "BAAI/bge-reranker-v2-m3",
     max_length: int = 512,
 ) -> "CrossEncoder":
     """Lazy-load cross-encoder reranker.
