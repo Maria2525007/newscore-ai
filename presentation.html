@@ -6,6 +6,7 @@
 <title>Новостной ИИ Агент — ИТМО Стартап-трек 2026</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <style>
 :root {
   --navy-deep: #0A1929;
@@ -67,7 +68,7 @@ body{
   position:absolute;inset:0;
   display:flex;flex-direction:column;
   justify-content:center;align-items:center;
-  padding:52px 80px;
+  padding:36px 52px;
   opacity:0;transform:translateY(28px);
   transition:opacity .45s ease,transform .45s ease;
   pointer-events:none;overflow:hidden;
@@ -331,6 +332,12 @@ body{
 .mkt-bar-wrap{flex:1;height:6px;background:#E2E8F0;border-radius:4px;overflow:hidden}
 .mkt-bar{height:100%;border-radius:4px;transition:width .8s ease}
 
+/* ── SCALE UP content for projector ────────── */
+.sl{
+  transform:scale(1.2);
+  transform-origin:center center;
+}
+
 /* ── ANIMATIONS ───────────────────────────── */
 @keyframes fup{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
 .a1{animation:fup .55s ease both .08s}
@@ -339,6 +346,33 @@ body{
 .a4{animation:fup .55s ease both .46s}
 .a5{animation:fup .55s ease both .58s}
 .slide:not(.on) *{animation:none!important}
+
+/* ── BROWSER MOCKUP ──────────────────────── */
+.browser{
+  background:#1E2A3A;border:1px solid rgba(255,255,255,.12);
+  border-radius:12px;overflow:hidden;
+}
+.browser-bar{
+  background:#162030;padding:9px 14px;
+  display:flex;align-items:center;gap:8px;
+  border-bottom:1px solid rgba(255,255,255,.08);
+}
+.browser-dot{width:9px;height:9px;border-radius:50%}
+.browser-url{
+  flex:1;background:rgba(255,255,255,.07);border-radius:5px;
+  padding:4px 10px;font-size:10px;color:rgba(255,255,255,.4);
+  font-family:'Inter',monospace;letter-spacing:.02em;
+}
+.browser-body{padding:16px;min-height:120px}
+
+/* ── TEAM PHOTO FRAME ────────────────────── */
+.photo-frame{
+  border:2px dashed rgba(41,121,255,.35);
+  border-radius:16px;
+  background:rgba(41,121,255,.04);
+  display:flex;align-items:center;justify-content:center;
+  flex-direction:column;gap:10px;
+}
 
 /* ── PRINT ───────────────────────────────── */
 @media print{
@@ -439,10 +473,14 @@ body{
     <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
     <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
   </symbol>
+  <symbol id="i-camera" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
+    <circle cx="12" cy="13" r="4"/>
+  </symbol>
 </svg>
 
-<div id="progress-bar" style="width:9.09%"></div>
-<div id="counter">1 / 11</div>
+<div id="progress-bar" style="width:11.11%"></div>
+<div id="counter">1 / 9</div>
 <div id="nav-dots"></div>
 
 <div id="wrap">
@@ -462,14 +500,16 @@ body{
 
     <div class="a3" style="width:1px;height:32px;background:linear-gradient(180deg,transparent,rgba(255,255,255,.15));margin:0 auto 44px"></div>
 
-    <div class="a4" style="width:1px;height:1px;margin:0"></div>
-
     <p class="a4" style="font-size:12px;color:rgba(248,249,250,.3);letter-spacing:.1em;text-transform:uppercase;font-weight:500;margin-bottom:16px">
       ИТМО Стартап — трек 2026
     </p>
 
-    <p class="a5" style="font-size:12px;color:rgba(248,249,250,.22);font-weight:400;letter-spacing:.04em">
+    <p class="a5" style="font-size:12px;color:#fff;font-weight:400;letter-spacing:.04em;margin-bottom:10px">
       Махмудова&thinsp;·&thinsp;Пахомов&thinsp;·&thinsp;Григорьева&thinsp;·&thinsp;Гайнуллина&thinsp;·&thinsp;Гальченко&thinsp;·&thinsp;Метель
+    </p>
+
+    <p class="a5" style="font-size:11px;color:#fff;font-weight:400;letter-spacing:.04em">
+      Научный руководитель: Поцулин Антон Дмитриевич
     </p>
   </div>
 </div>
@@ -478,13 +518,13 @@ body{
 <div class="slide dk" id="s2">
   <div class="orb o1" style="opacity:.4"></div>
 
-  <div style="width:100%;max-width:980px;position:relative;z-index:1">
+  <div class="sl" style="width:100%;max-width:980px;position:relative;z-index:1">
     <div class="label a1">Проблема</div>
     <h2 class="h1 dk-g a2" style="margin-bottom:34px;max-width:620px">
       Информационный шум<br>убивает продуктивность
     </h2>
 
-    <div class="a3" style="display:flex;gap:14px;margin-bottom:34px">
+    <div class="a3" style="display:flex;gap:14px;margin-bottom:24px">
       <div class="gc stat">
         <div class="stat-n">70–130</div>
         <div class="stat-l">новостей в день<br>на одного аналитика</div>
@@ -503,16 +543,16 @@ body{
       </div>
     </div>
 
-    <div class="a4 quote">
-      «Аналитик физически не может качественно обработать 100+ новостей в день.
-      Большая часть времени уходит на отсев мусора, а не на анализ важного.»
+    <div class="a4" style="display:inline-flex;align-items:center;gap:9px;padding:10px 20px;background:rgba(0,200,83,.10);border:1px solid rgba(0,200,83,.28);border-radius:100px">
+      <svg width="15" height="15" style="color:var(--green-ok);flex-shrink:0"><use href="#i-check"/></svg>
+      <span style="font-size:13px;font-weight:600;color:var(--green-ok)">Подтверждено опросами</span>
     </div>
   </div>
 </div>
 
 <!-- ══ SLIDE 3 — SOLUTION ═══════════════════════════════════════ -->
 <div class="slide lt" id="s3">
-  <div style="width:100%;max-width:980px">
+  <div class="sl" style="width:100%;max-width:980px">
     <div class="label a1">Решение</div>
     <h2 class="h1 a2" style="margin-bottom:10px;max-width:640px">
       Новостной ИИ Агент — ваш персональный<br>агент деловых новостей
@@ -565,63 +605,119 @@ body{
   </div>
 </div>
 
-<!-- ══ SLIDE 4 — AI PIPELINE ════════════════════════════════════ -->
+<!-- ══ SLIDE 4 — MVP DEMO ════════════════════════════════════════ -->
 <div class="slide dk" id="s4">
-  <div class="grid-bg" style="opacity:.45"></div>
-  <div class="orb o1" style="opacity:.35"></div>
+  <div class="grid-bg" style="opacity:.4"></div>
+  <div class="orb o1" style="opacity:.3"></div>
 
-  <div style="width:100%;max-width:1020px;position:relative;z-index:1">
-    <div class="label a1">Архитектура</div>
-    <h2 class="h1 dk-g a2" style="margin-bottom:6px">5-ступенчатый AI-пайплайн</h2>
-    <p class="a2 muted" style="font-size:13px;margin-bottom:28px">Каждая новость проходит полную обработку менее чем за 8 секунд</p>
+  <div class="sl" style="width:100%;max-width:980px;position:relative;z-index:1">
+    <div class="label a1">Демо</div>
+    <h2 class="h1 dk-g a2" style="margin-bottom:6px">Рабочий МВП</h2>
+    <p class="a2 muted" style="font-size:13px;margin-bottom:24px">Уже запущен — попробуйте прямо сейчас</p>
 
-    <div class="a3 pipe-row" style="gap:8px;margin-bottom:24px">
-      <div class="pipe-blk">
-        <div class="p-icon"><svg width="22" height="22" style="color:var(--blue-bright)"><use href="#i-search"/></svg></div>
-        <div class="p-name">Матчинг</div>
-        <div class="p-model">multilingual-e5-base<br>600 MB · Cosine sim</div>
+    <div class="a3" style="display:grid;grid-template-columns:1fr auto;gap:32px;align-items:center">
+      <!-- MVP Screenshot -->
+      <div class="browser" style="overflow:hidden;line-height:0">
+        <div class="browser-bar" style="line-height:normal">
+          <div class="browser-dot" style="background:#FF5F57"></div>
+          <div class="browser-dot" style="background:#FEBC2E"></div>
+          <div class="browser-dot" style="background:#28C840"></div>
+          <div class="browser-url">http://95.182.82.28:8000</div>
+        </div>
+        <img src="presentation/mvp-screenshot.png" alt="MVP screenshot"
+             style="width:100%;display:block;border-radius:0 0 11px 11px">
       </div>
-      <div class="pipe-blk">
-        <div class="p-icon"><svg width="22" height="22" style="color:var(--blue-bright)"><use href="#i-doc"/></svg></div>
-        <div class="p-name">BM25</div>
-        <div class="p-model">BM25Okapi<br>+ PyMorphy3</div>
-      </div>
-      <div class="pipe-blk" style="border-color:rgba(41,121,255,.55);background:rgba(41,121,255,.10)">
-        <div class="p-icon"><svg width="22" height="22" style="color:var(--blue-bright)"><use href="#i-bolt"/></svg></div>
-        <div class="p-name" style="color:var(--blue-bright)">Hybrid RRF</div>
-        <div class="p-model">Reciprocal<br>Rank Fusion</div>
-      </div>
-      <div class="pipe-blk">
-        <div class="p-icon"><svg width="22" height="22" style="color:var(--blue-bright)"><use href="#i-crosshair"/></svg></div>
-        <div class="p-name">Rerank</div>
-        <div class="p-model">bge-reranker-v2-m3<br>568 MB · Cross-enc</div>
-      </div>
-      <div class="pipe-blk" style="border-color:rgba(0,200,83,.4);background:rgba(0,200,83,.06)">
-        <div class="p-icon"><svg width="22" height="22" style="color:var(--green-ok)"><use href="#i-edit"/></svg></div>
-        <div class="p-name" style="color:var(--green-ok)">Summary</div>
-        <div class="p-model">e5-base extractive<br>топ-3 предложения</div>
-      </div>
-    </div>
 
-    <div class="a4" style="display:flex;justify-content:center">
-      <div class="bbar">
-        <svg width="14" height="14" style="color:var(--blue-bright)"><use href="#i-home"/></svg>
-        <span>Всё локально</span>
-        <span class="bbar-sep">·</span>
-        <span>Без дорогих API</span>
-        <span class="bbar-sep">·</span>
-        <span>&lt;8 сек/статью</span>
-        <span class="bbar-sep">·</span>
-        <svg width="14" height="14" style="color:var(--blue-bright)"><use href="#i-shield"/></svg>
-        <span>&gt;98% точность</span>
+      <!-- QR Code -->
+      <div style="text-align:center;flex-shrink:0">
+        <div style="background:#fff;padding:14px;border-radius:14px;display:inline-block;margin-bottom:12px">
+          <div id="qrcode"></div>
+        </div>
+        <p style="font-size:10px;color:var(--muted);letter-spacing:.04em;font-family:'Inter',monospace">95.182.82.28:8000</p>
+        <p style="font-size:10px;color:rgba(248,249,250,.3);margin-top:4px">Отсканируйте QR-код</p>
       </div>
     </div>
   </div>
 </div>
 
-<!-- ══ SLIDE 5 — MARKET ══════════════════════════════════════════ -->
-<div class="slide lt" id="s5">
-  <div style="width:100%;max-width:980px">
+<!-- ══ SLIDE 5 — COMPETITIVE ════════════════════════════════════ -->
+<div class="slide dk" id="s5">
+  <div class="orb o2" style="opacity:.35"></div>
+  <div class="sl" style="width:100%;max-width:1060px;position:relative;z-index:1">
+    <div class="label a1">Конкурентный анализ</div>
+    <div class="a2" style="display:flex;align-items:baseline;gap:16px;margin-bottom:20px">
+      <h2 class="h1 dk-g" style="flex-shrink:0">Конкурентный анализ</h2>
+      <span style="font-size:14px;font-style:italic;color:var(--muted);font-weight:300">«Мы не заменяем источники — мы работаем поверх них»</span>
+    </div>
+
+    <div class="a3">
+      <table class="ctab" style="font-size:12px">
+        <thead>
+          <tr>
+            <th style="text-align:left;color:var(--muted);width:22%">Критерий</th>
+            <th style="color:var(--muted)">РБК / Дзен</th>
+            <th style="color:var(--muted)">Telegram</th>
+            <th style="color:var(--muted)">ChatGPT</th>
+            <th style="color:var(--muted)">Agentic News</th>
+            <th style="color:var(--blue-bright);background:rgba(41,121,255,.08)">Новостной ИИ Агент</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td style="color:var(--muted)">Фильтрация под пользователя</td>
+            <td><span class="no">Нет</span></td>
+            <td><span style="color:#FFB300;font-size:11px;font-weight:600">Частично</span></td>
+            <td><span class="yes">Да</span></td>
+            <td><span class="yes">Да</span></td>
+            <td class="hl-cell"><span class="yes">По промпту</span></td>
+          </tr>
+          <tr>
+            <td style="color:var(--muted)">Умная категоризация</td>
+            <td><span class="no">Нет</span></td>
+            <td><span class="no">Нет</span></td>
+            <td><span style="color:#FFB300;font-size:11px;font-weight:600">Общая</span></td>
+            <td><span class="yes">Да</span></td>
+            <td class="hl-cell"><span class="yes">Автоматически</span></td>
+          </tr>
+          <tr>
+            <td style="color:var(--muted)">Работа в фоне (агент)</td>
+            <td><span class="no">Нет</span></td>
+            <td><span class="no">Нет</span></td>
+            <td><span class="no">Нет</span></td>
+            <td><span class="yes">Да</span></td>
+            <td class="hl-cell"><span class="yes">Уникально</span></td>
+          </tr>
+          <tr>
+            <td style="color:var(--muted)">Регулярный дайджест</td>
+            <td><span class="no">Нет</span></td>
+            <td><span style="color:#FFB300;font-size:11px;font-weight:600">Ручной</span></td>
+            <td><span class="no">Нет</span></td>
+            <td><span class="yes">Да</span></td>
+            <td class="hl-cell"><span class="yes">Настраиваемый</span></td>
+          </tr>
+          <tr>
+            <td style="color:var(--muted)">Цена</td>
+            <td style="color:var(--muted);font-size:11px">Бесплатно</td>
+            <td style="color:var(--muted);font-size:11px">Бесплатно</td>
+            <td style="color:var(--muted);font-size:11px">~2 000 ₽</td>
+            <td style="color:var(--muted);font-size:11px">~$20–50/мес</td>
+            <td class="hl-cell" style="color:var(--green-ok);font-weight:700;font-size:12px">1 200 ₽/мес</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="a4" style="margin-top:12px;padding:11px 18px;background:rgba(41,121,255,.09);border:1px solid rgba(41,121,255,.25);border-radius:10px">
+      <span style="font-size:12px;color:rgba(248,249,250,.8)">
+        <strong style="color:var(--blue-bright)">Вывод:</strong> Единственный продукт с агентом в фоне на российском рынке по доступной цене
+      </span>
+    </div>
+  </div>
+</div>
+
+<!-- ══ SLIDE 6 — MARKET ══════════════════════════════════════════ -->
+<div class="slide lt" id="s6">
+  <div class="sl" style="width:100%;max-width:980px">
     <div class="label a1">Рынок</div>
     <h2 class="h1 a2" style="margin-bottom:28px">Рынок деловых новостей РФ:<br>огромный и растущий</h2>
 
@@ -711,30 +807,31 @@ body{
   </div>
 </div>
 
-<!-- ══ SLIDE 6 — BUSINESS MODEL ════════════════════════════════ -->
-<div class="slide dk" id="s6">
+<!-- ══ SLIDE 7 — BUSINESS MODEL ════════════════════════════════ -->
+<div class="slide dk" id="s7">
   <div class="orb o1" style="opacity:.28"></div>
-  <div style="width:100%;max-width:900px;position:relative;z-index:1">
+  <div class="sl" style="width:100%;max-width:900px;position:relative;z-index:1">
     <div class="label a1">Бизнес-модель</div>
-    <h2 class="h1 dk-g a2" style="margin-bottom:22px">Монетизация и юнит-экономика</h2>
+    <h2 class="h1 dk-g a2" style="margin-bottom:6px">Модель монетизации: подписка</h2>
+    <p class="a2 muted" style="font-size:12px;margin-bottom:20px">Subscription-first · без транзакционных комиссий</p>
 
     <div class="pricing a3">
       <div class="pc">
         <div class="pc-tier">Trial</div>
         <div class="pc-amt">0 <span style="font-size:16px">₽</span></div>
         <div class="pc-sub">7 дней</div>
-        <div class="pc-feat">Базовый доступ<br>Без архива</div>
+        <div class="pc-feat">Без архива</div>
       </div>
       <div class="pc feat">
         <div class="pc-tier" style="color:var(--blue-bright)">Personal</div>
-        <div class="pc-amt">790 <span style="font-size:16px">₽</span></div>
-        <div class="pc-sub">в месяц</div>
+        <div class="pc-amt">1 200 <span style="font-size:16px">₽</span></div>
+        <div class="pc-sub">подписка / мес</div>
         <div class="pc-feat" style="color:rgba(248,249,250,.75)">5 категорий<br>Безлимит + архив</div>
       </div>
       <div class="pc">
         <div class="pc-tier">Team</div>
         <div class="pc-amt" style="font-size:20px">~6 000 <span style="font-size:13px">₽</span></div>
-        <div class="pc-sub">в месяц</div>
+        <div class="pc-sub">подписка / мес</div>
         <div class="pc-feat">До 10 пользователей<br>Дашборд</div>
       </div>
       <div class="pc">
@@ -751,28 +848,20 @@ body{
         <div class="ml">себестоимость / мес</div>
       </div>
       <div class="mtile">
-        <div class="mb" style="color:var(--green-ok)">~68%</div>
+        <div class="mb" style="color:var(--green-ok)">~79%</div>
         <div class="ml">валовая маржа</div>
       </div>
       <div class="mtile">
         <div class="mb" style="color:#FFB300">0.7×</div>
         <div class="ml">LTV / CAC</div>
       </div>
-      <div class="mtile" style="flex:2;text-align:left;padding:16px 18px">
-        <div style="font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-bottom:8px">Стратегия запуска</div>
-        <div style="font-size:11.5px;color:rgba(248,249,250,.65);line-height:1.75">
-          Web-first · Product-Led Growth<br>
-          Freemium → органический рост (SEO)<br>
-          Масштабирование через B2B
-        </div>
-      </div>
     </div>
   </div>
 </div>
 
-<!-- ══ SLIDE 7 — TRACTION ════════════════════════════════════════ -->
-<div class="slide lt" id="s7">
-  <div style="width:100%;max-width:980px">
+<!-- ══ SLIDE 8 — TRACTION ════════════════════════════════════════ -->
+<div class="slide lt" id="s8">
+  <div class="sl" style="width:100%;max-width:980px">
     <div class="label a1">Трекшн и валидация</div>
     <h2 class="h1 a2" style="margin-bottom:28px">Доверие экспертов<br>и первые результаты</h2>
 
@@ -821,244 +910,33 @@ body{
   </div>
 </div>
 
-<!-- ══ SLIDE 8 — COMPETITIVE ════════════════════════════════════ -->
-<div class="slide dk" id="s8">
-  <div class="orb o2" style="opacity:.35"></div>
-  <div style="width:100%;max-width:1060px;position:relative;z-index:1">
-    <div class="label a1">Конкурентный анализ</div>
-    <div class="a2" style="display:flex;align-items:baseline;gap:16px;margin-bottom:20px">
-      <h2 class="h1 dk-g" style="flex-shrink:0">Конкурентный анализ</h2>
-      <span style="font-size:14px;font-style:italic;color:var(--muted);font-weight:300">«Мы не заменяем источники — мы работаем поверх них»</span>
-    </div>
-
-    <div class="a3">
-      <table class="ctab" style="font-size:12px">
-        <thead>
-          <tr>
-            <th style="text-align:left;color:var(--muted);width:22%">Критерий</th>
-            <th style="color:var(--muted)">РБК / Дзен</th>
-            <th style="color:var(--muted)">Telegram</th>
-            <th style="color:var(--muted)">ChatGPT</th>
-            <th style="color:var(--muted)">Agentic News</th>
-            <th style="color:var(--blue-bright);background:rgba(41,121,255,.08)">Новостной ИИ Агент</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td style="color:var(--muted)">Фильтрация под пользователя</td>
-            <td><span class="no">Нет</span></td>
-            <td><span style="color:#FFB300;font-size:11px;font-weight:600">Частично</span></td>
-            <td><span class="yes">Да</span></td>
-            <td><span class="yes">Да</span></td>
-            <td class="hl-cell"><span class="yes">По промпту</span></td>
-          </tr>
-          <tr>
-            <td style="color:var(--muted)">Умная категоризация</td>
-            <td><span class="no">Нет</span></td>
-            <td><span class="no">Нет</span></td>
-            <td><span style="color:#FFB300;font-size:11px;font-weight:600">Общая</span></td>
-            <td><span class="yes">Да</span></td>
-            <td class="hl-cell"><span class="yes">Автоматически</span></td>
-          </tr>
-          <tr>
-            <td style="color:var(--muted)">Работа в фоне (агент)</td>
-            <td><span class="no">Нет</span></td>
-            <td><span class="no">Нет</span></td>
-            <td><span class="no">Нет</span></td>
-            <td><span class="yes">Да</span></td>
-            <td class="hl-cell"><span class="yes">Уникально</span></td>
-          </tr>
-          <tr>
-            <td style="color:var(--muted)">Регулярный дайджест</td>
-            <td><span class="no">Нет</span></td>
-            <td><span style="color:#FFB300;font-size:11px;font-weight:600">Ручной</span></td>
-            <td><span class="no">Нет</span></td>
-            <td><span class="yes">Да</span></td>
-            <td class="hl-cell"><span class="yes">Настраиваемый</span></td>
-          </tr>
-          <tr>
-            <td style="color:var(--muted)">Цена</td>
-            <td style="color:var(--muted);font-size:11px">Бесплатно</td>
-            <td style="color:var(--muted);font-size:11px">Бесплатно</td>
-            <td style="color:var(--muted);font-size:11px">~2 000 ₽</td>
-            <td style="color:var(--muted);font-size:11px">~$20–50/мес</td>
-            <td class="hl-cell" style="color:var(--green-ok);font-weight:700;font-size:12px">790 ₽/мес</td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
-
-    <div class="a4" style="margin-top:12px;padding:11px 18px;background:rgba(41,121,255,.09);border:1px solid rgba(41,121,255,.25);border-radius:10px">
-      <span style="font-size:12px;color:rgba(248,249,250,.8)">
-        <strong style="color:var(--blue-bright)">Вывод:</strong> Единственный продукт с агентом в фоне на российском рынке по доступной цене
-      </span>
-    </div>
-  </div>
-</div>
-
-<!-- ══ SLIDE 9 — GO-TO-MARKET ═══════════════════════════════════ -->
+<!-- ══ SLIDE 9 — TEAM ════════════════════════════════════════════ -->
 <div class="slide lt" id="s9">
-  <div style="width:100%;max-width:980px">
-    <div class="label a1">Стратегия выхода</div>
-    <h2 class="h1 a2" style="margin-bottom:28px">Как мы завоёвываем рынок:<br>Enterprise-first</h2>
+  <div style="width:100%;max-width:980px;display:grid;grid-template-columns:1fr 280px;gap:32px;align-items:stretch;height:75vh;max-height:480px">
 
-    <div class="a3" style="display:grid;grid-template-columns:5fr 3fr;gap:28px;align-items:start">
-      <div class="tl">
-        <div class="tl-phase cur">
-          <div class="tl-num" style="color:var(--blue-accent)">Этап 1 · 0–6 мес · Текущий</div>
-          <div class="tl-h">Запуск с якорным клиентом</div>
-          <ul class="tl-li">
-            <li>Пилот для Евразийского РА</li>
-            <li>Сбор обратной связи</li>
-            <li>Публикация кейса</li>
-          </ul>
-        </div>
-        <div class="tl-phase">
-          <div class="tl-num" style="color:var(--dark-muted)">Этап 2 · 6–12 мес</div>
-          <div class="tl-h">Масштабирование</div>
-          <ul class="tl-li">
-            <li>Прямые продажи в консалтинг</li>
-            <li>Контент-маркетинг, SEO</li>
-            <li>Партнёрства с бизнес-медиа</li>
-          </ul>
-        </div>
-        <div class="tl-phase">
-          <div class="tl-num" style="color:var(--dark-muted)">Этап 3 · 12–24 мес</div>
-          <div class="tl-h">Массовый B2C</div>
-          <ul class="tl-li">
-            <li>Performance-маркетинг</li>
-            <li>Реферальная программа</li>
-            <li>Интеграции с бизнес-инструментами</li>
-          </ul>
-        </div>
-      </div>
+    <!-- Photo placeholder -->
+    <div class="photo-frame" style="min-height:300px">
+      <svg width="48" height="48" style="color:#CBD5E0;margin-bottom:4px"><use href="#i-camera"/></svg>
+      <span style="font-size:13px;font-weight:600;color:var(--dark-muted)">Фото команды</span>
+    </div>
 
+    <!-- Right panel -->
+    <div style="display:flex;flex-direction:column;justify-content:space-between;padding:8px 0">
       <div>
-        <p style="font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--dark-muted);margin-bottom:12px">Воронка Enterprise-продаж</p>
-        <div class="fnl">
-          <div class="fstep cur">Демо</div>
-          <div class="farr">↓</div>
-          <div class="fstep">2-недельный пилот</div>
-          <div class="farr">↓</div>
-          <div class="fstep">Кастомизация</div>
-          <div class="farr">↓</div>
-          <div class="fstep done">Годовой контракт</div>
+        <div class="label" style="margin-bottom:10px">Команда</div>
+        <div style="display:flex;flex-direction:column;gap:6px;margin-bottom:28px">
+          <div style="padding:9px 13px;background:#fff;border:1px solid #D1DCE8;border-radius:9px;font-size:12px;font-weight:600;color:var(--dark-text)">Махмудова Мария</div>
+          <div style="padding:9px 13px;background:#fff;border:1px solid #D1DCE8;border-radius:9px;font-size:12px;font-weight:600;color:var(--dark-text)">Гальченко Дмитрий</div>
+          <div style="padding:9px 13px;background:#fff;border:1px solid #D1DCE8;border-radius:9px;font-size:12px;font-weight:600;color:var(--dark-text)">Пахомов Владислав</div>
+          <div style="padding:9px 13px;background:#fff;border:1px solid #D1DCE8;border-radius:9px;font-size:12px;font-weight:600;color:var(--dark-text)">Григорьева Юлия</div>
+          <div style="padding:9px 13px;background:#fff;border:1px solid #D1DCE8;border-radius:9px;font-size:12px;font-weight:600;color:var(--dark-text)">Гайнуллина Алиса</div>
+          <div style="padding:9px 13px;background:#fff;border:1px solid #D1DCE8;border-radius:9px;font-size:12px;font-weight:600;color:var(--dark-text)">Метель Леонард</div>
         </div>
       </div>
-    </div>
-  </div>
-</div>
 
-<!-- ══ SLIDE 10 — RISKS ══════════════════════════════════════════ -->
-<div class="slide dk" id="s10">
-  <div class="orb o1" style="opacity:.25"></div>
-  <div style="width:100%;max-width:900px;position:relative;z-index:1">
-    <div class="label a1">Управление рисками</div>
-    <h2 class="h1 dk-g a2" style="margin-bottom:6px">FMEA-анализ ключевых рисков</h2>
-    <p class="a2 muted" style="font-size:13px;margin-bottom:22px">Видим риски заранее — и знаем, как ими управлять</p>
-
-    <div class="a3" style="margin-bottom:6px;display:grid;grid-template-columns:26px 3fr 90px 2.5fr;gap:6px 12px;padding:0 18px">
-      <div></div>
-      <div style="font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)">Риск</div>
-      <div style="font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);text-align:center">RPN</div>
-      <div style="font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)">Ключевые меры</div>
-    </div>
-
-    <div class="a4">
-      <div class="rrow rh">
-        <div><svg width="18" height="18" style="color:var(--red-risk)"><use href="#i-alert"/></svg></div>
-        <div>
-          <div style="font-weight:600;font-size:13px;color:var(--warm-white);margin-bottom:2px">Высокий CAC</div>
-          <div style="font-size:11px;color:var(--muted)">Дорогое привлечение на тариф 790 ₽</div>
-        </div>
-        <div style="text-align:center"><span class="rbadge r">320</span></div>
-        <div style="font-size:11px;color:rgba(248,249,250,.6);line-height:1.7">Органический рост · Годовые тарифы со скидкой · Таргет на «горячие» запросы</div>
-      </div>
-
-      <div class="rrow rh">
-        <div><svg width="18" height="18" style="color:var(--red-risk)"><use href="#i-alert"/></svg></div>
-        <div>
-          <div style="font-weight:600;font-size:13px;color:var(--warm-white);margin-bottom:2px">Слабая дифференциация</div>
-          <div style="font-size:11px;color:var(--muted)">Конкуренция с Telegram-каналами</div>
-        </div>
-        <div style="text-align:center"><span class="rbadge r">315</span></div>
-        <div style="font-size:11px;color:rgba(248,249,250,.6);line-height:1.7">Фокус на регуляторике · Демонстрация «до/после» · Уникальные списки наблюдения</div>
-      </div>
-
-      <div class="rrow rm">
-        <div><svg width="18" height="18" style="color:var(--yellow-risk)"><use href="#i-alert"/></svg></div>
-        <div>
-          <div style="font-weight:600;font-size:13px;color:var(--warm-white);margin-bottom:2px">Усталость от уведомлений</div>
-          <div style="font-size:11px;color:var(--muted)">Низкая релевантность → отток</div>
-        </div>
-        <div style="text-align:center"><span class="rbadge y">252</span></div>
-        <div style="font-size:11px;color:rgba(248,249,250,.6);line-height:1.7">Обратная связь по ложным срабатываниям · Быстрая отписка · Дообучение</div>
-      </div>
-    </div>
-
-    <div class="a5" style="margin-top:16px;text-align:center;padding:11px 22px;background:rgba(0,200,83,.07);border:1px solid rgba(0,200,83,.22);border-radius:10px">
-      <span style="font-size:12px;color:var(--green-ok);font-weight:600">
-        Цель: снизить RPN топ-рисков на 40% за 6 месяцев
-      </span>
-    </div>
-  </div>
-</div>
-
-<!-- ══ SLIDE 11 — TECH STACK ═════════════════════════════════════ -->
-<div class="slide lt" id="s11">
-  <div style="width:100%;max-width:980px">
-    <div class="label a1">Технологический стек</div>
-    <h2 class="h1 a2" style="margin-bottom:8px">Гибридный поиск без дорогих API</h2>
-    <div class="a2" style="width:40px;height:2px;background:linear-gradient(90deg,var(--blue-accent),transparent);border-radius:2px;margin:10px 0 22px"></div>
-
-    <div class="a3" style="display:flex;gap:8px;margin-bottom:20px;align-items:stretch">
-      <div class="pipe-blk-lt">
-        <div class="p-icon" style="height:26px"><svg width="20" height="20" style="color:var(--blue-accent)"><use href="#i-search"/></svg></div>
-        <div class="p-name-lt">Матчинг</div>
-        <div class="p-model-lt">multilingual-e5-base<br>600 MB<br>Cosine similarity</div>
-      </div>
-      <div class="pipe-blk-lt">
-        <div class="p-icon" style="height:26px"><svg width="20" height="20" style="color:var(--blue-accent)"><use href="#i-doc"/></svg></div>
-        <div class="p-name-lt">BM25</div>
-        <div class="p-model-lt">BM25Okapi + PyMorphy3<br>Лемматизация<br>Буст заголовков ×3</div>
-      </div>
-      <div class="pipe-blk-lt" style="border-color:rgba(41,121,255,.35);background:rgba(41,121,255,.04)">
-        <div class="p-icon" style="height:26px"><svg width="20" height="20" style="color:var(--blue-accent)"><use href="#i-bolt"/></svg></div>
-        <div class="p-name-lt" style="color:var(--blue-accent)">Hybrid RRF</div>
-        <div class="p-model-lt">Reciprocal Rank Fusion<br>BM25 + embedding<br>Ранговое слияние</div>
-      </div>
-      <div class="pipe-blk-lt">
-        <div class="p-icon" style="height:26px"><svg width="20" height="20" style="color:var(--blue-accent)"><use href="#i-crosshair"/></svg></div>
-        <div class="p-name-lt">Rerank</div>
-        <div class="p-model-lt">bge-reranker-v2-m3<br>568 MB<br>Cross-encoder</div>
-      </div>
-      <div class="pipe-blk-lt" style="border-color:rgba(0,200,83,.35);background:rgba(0,200,83,.03)">
-        <div class="p-icon" style="height:26px"><svg width="20" height="20" style="color:var(--green-ok)"><use href="#i-edit"/></svg></div>
-        <div class="p-name-lt" style="color:var(--green-ok)">Summary</div>
-        <div class="p-model-lt">e5-base extractive<br>топ-3 предложения<br>без LLM API</div>
-      </div>
-    </div>
-
-    <div class="a4" style="display:flex;gap:10px">
-      <div class="atile">
-        <svg width="20" height="20" style="color:var(--blue-accent);margin-bottom:6px"><use href="#i-home"/></svg>
-        <div class="ab" style="font-size:18px">Локально</div>
-        <div class="al">Нет внешних зависимостей</div>
-      </div>
-      <div class="atile">
-        <div class="ab">150 ₽</div>
-        <div style="font-family:'Inter',sans-serif;font-size:12px;font-weight:700;color:var(--dark-text);margin-top:4px">в месяц</div>
-        <div class="al">себестоимость на пользователя</div>
-      </div>
-      <div class="atile">
-        <div class="ab">&lt;8 с</div>
-        <div style="font-family:'Inter',sans-serif;font-size:12px;font-weight:700;color:var(--dark-text);margin-top:4px">на статью</div>
-        <div class="al">полный цикл обработки</div>
-      </div>
-      <div class="atile">
-        <div class="ab">&gt;98%</div>
-        <div style="font-family:'Inter',sans-serif;font-size:12px;font-weight:700;color:var(--dark-text);margin-top:4px">точность</div>
-        <div class="al">релевантности запросов</div>
+      <div style="padding:14px 16px;background:rgba(41,121,255,.07);border:1px solid rgba(41,121,255,.22);border-radius:12px">
+        <div style="font-size:9px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--blue-accent);margin-bottom:6px">Научный руководитель</div>
+        <div style="font-size:13px;font-weight:700;color:var(--dark-text);line-height:1.4">Поцулин<br>Антон Дмитриевич</div>
       </div>
     </div>
   </div>
@@ -1111,6 +989,30 @@ document.addEventListener('touchend', e => {
   const d = tx - e.changedTouches[0].clientX;
   if (Math.abs(d)>50) go(cur+(d>0?1:-1));
 }, {passive:true});
+
+// QR code
+if (typeof QRCode !== 'undefined') {
+  new QRCode(document.getElementById('qrcode'), {
+    text: 'http://95.182.82.28:8000',
+    width: 160,
+    height: 160,
+    colorDark: '#0A1929',
+    colorLight: '#ffffff',
+    correctLevel: QRCode.CorrectLevel.M
+  });
+} else {
+  const el = document.getElementById('qrcode');
+  if (el) {
+    el.style.width = '160px';
+    el.style.height = '160px';
+    el.style.display = 'flex';
+    el.style.alignItems = 'center';
+    el.style.justifyContent = 'center';
+    el.style.fontSize = '10px';
+    el.style.color = '#666';
+    el.textContent = 'QR offline';
+  }
+}
 </script>
 </body>
 </html>
