@@ -29,7 +29,12 @@ venv/
 .cache/
 traces/
 data/
-backend/tests/qualitative/snapshots/
+# sample-30d (~2 MB) держим в git — нужен для воспроизведения qual-eval
+# на других машинах / в CI / при demo. Остальные snapshots — ignored.
+# Pattern: игнорим содержимое директории, но не саму директорию (иначе
+# `!`-exception для child'ов перестаёт работать — git ограничение).
+backend/tests/qualitative/snapshots/*
+!backend/tests/qualitative/snapshots/sample-30d/
 backend/tests/qualitative/reports/*.md
 !backend/tests/qualitative/reports/.gitkeep
 !backend/tests/qualitative/reports/baseline_*.md

@@ -1,0 +1,16 @@
+{
+  "snapshot_id": "sample-30d",
+  "collected_at": "2026-05-23T13:11:00.477550+00:00",
+  "freshness_days": 30,
+  "articles_count": 679,
+  "partial": false,
+  "failed_sources": [],
+  "by_source": {
+    "rbc_main": 30,
+    "kommersant": 404,
+    "vedomosti_business": 200,
+    "interfax": 25,
+    "forbes_ru": 20
+  },
+  "duration_s": 27.13
+}
