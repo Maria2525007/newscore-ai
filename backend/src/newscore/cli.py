@@ -77,7 +77,13 @@ def web_cmd(
         Path("configs/sources.yaml"), "--config", "-c", exists=True
     ),
     log_level: str = typer.Option("INFO", "--log-level"),
-    default_matcher: str = typer.Option("rerank", "--default-matcher"),
+    default_matcher: str = typer.Option(
+        "hybrid",
+        "--default-matcher",
+        help="hybrid (BM25+e5 RRF, ~1-2с/run) — безопасный default для CPU. "
+        "rerank (bge-reranker-v2-m3, ~30-60с/run) — макс. точность, "
+        "требует AVX-512/быстрый CPU или GPU. embedding/bm25 — baseline.",
+    ),
     warmup: bool = typer.Option(
         True,
         "--warmup/--no-warmup",

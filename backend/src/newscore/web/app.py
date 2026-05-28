@@ -44,7 +44,7 @@ _errors: dict[str, str] = {}   # theme_id → последняя ошибка в
 _log = logging.getLogger(__name__)
 
 
-def create_app(service: ThemeService, default_matcher: str = "rerank") -> FastAPI:
+def create_app(service: ThemeService, default_matcher: str = "hybrid") -> FastAPI:
     app = FastAPI(title="NewsCore AI")
     templates = Jinja2Templates(directory=str(TEMPLATES_DIR))
     templates.env.filters["msk"] = _to_msk
