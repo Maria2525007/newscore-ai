@@ -12,8 +12,9 @@
 # 1. Установка uv (если ещё нет)
 curl -LsSf https://astral.sh/uv/install.sh | sh
 
-# 2. Зависимости
-uv sync
+# 2. Зависимости — нужно выбрать backend для torch (sentence-transformers зависимость)
+uv sync --extra cpu      # default — VPS / Mac (CPU+MPS) / любая машина без GPU
+# uv sync --extra cu128  # GPU-сервер с CUDA 12.8
 
 # 3. Брифинг one-shot
 uv run newscore "курс валют"
