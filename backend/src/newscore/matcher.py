@@ -86,19 +86,13 @@ class EmbeddingMatcher:
             return []
         model = self._ensure_model()
 
-        q_text = f"query: {query}"
-        passages = [f"passage: {_article_text(a)}" for a in articles]
-
         q_emb = model.encode(
-            [q_text], normalize_embeddings=True, show_progress_bar=False
-        )[0]
-        p_embs = model.encode(
-            passages,
+            [f"query: {query}"],
             normalize_embeddings=True,
             show_progress_bar=False,
-            batch_size=16,
-        )
+        )[0]
 
+        p_embs = self._encode_passages_cached(model, articles)
         scores = np.asarray(p_embs) @ np.asarray(q_emb)
         idx = _topn_indices(scores, top_n)
 
@@ -109,6 +103,41 @@ class EmbeddingMatcher:
                 continue
             matches.append(Match(article=articles[int(i)], score=s))
         return matches
+
+    def _encode_passages_cached(self, model, articles: list[EnrichedArticle]):
+        """Encode только cache-miss articles; для остальных — вернуть из LRU."""
+        from newscore.embeddings import (
+            cache_passage_emb,
+            get_cached_passage_emb,
+        )
+
+        n = len(articles)
+        # Заранее аллоцируем матрицу под все embeddings.
+        result: list = [None] * n
+        miss_idx: list[int] = []
+        miss_passages: list[str] = []
+        for i, a in enumerate(articles):
+            url = str(a.url)
+            cached = get_cached_passage_emb(self.model_name, url)
+            if cached is not None:
+                result[i] = cached
+            else:
+                miss_idx.append(i)
+                miss_passages.append(f"passage: {_article_text(a)}")
+
+        if miss_passages:
+            new_embs = model.encode(
+                miss_passages,
+                normalize_embeddings=True,
+                show_progress_bar=False,
+                batch_size=16,
+            )
+            new_embs = np.asarray(new_embs)
+            for slot, (i, emb) in enumerate(zip(miss_idx, new_embs)):
+                result[i] = emb
+                cache_passage_emb(self.model_name, str(articles[i].url), emb)
+
+        return np.asarray(result)
 
 
 _RU_STOPWORDS = frozenset(

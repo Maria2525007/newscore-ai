@@ -78,6 +78,12 @@ def web_cmd(
     ),
     log_level: str = typer.Option("INFO", "--log-level"),
     default_matcher: str = typer.Option("rerank", "--default-matcher"),
+    warmup: bool = typer.Option(
+        True,
+        "--warmup/--no-warmup",
+        help="Прогреть ML-модели на старте (e5 ~7s + reranker ~4s). "
+        "Без этого первый запрос темы ждёт холодную загрузку.",
+    ),
 ) -> None:
     """Запустить web-интерфейс в браузере (Step 2)."""
     import uvicorn
@@ -85,9 +91,41 @@ def web_cmd(
     from newscore.web import create_app
 
     configure(level=log_level, fmt="console")
+    if warmup:
+        _warmup_models(default_matcher)
     service = _build_service(db, config)
     app_ = create_app(service, default_matcher=default_matcher)
     uvicorn.run(app_, host=host, port=port, log_level=log_level.lower())
+
+
+def _warmup_models(default_matcher: str) -> None:
+    """Eager-init ML моделей чтобы первый user request не ждал cold load.
+
+    e5-base: 7s холодный → 0.02s горячий запрос.
+    bge-reranker-v2-m3: 4s холодный → доступ к pre-loaded weights.
+    """
+    import time
+
+    needs_e5 = default_matcher in {"embedding", "hybrid", "rerank"}
+    needs_rerank = default_matcher == "rerank"
+    if not (needs_e5 or needs_rerank):
+        return
+
+    if needs_e5:
+        from newscore.embeddings import get_st_model
+
+        t = time.time()
+        m = get_st_model("intfloat/multilingual-e5-base")
+        # Прогон tiny encode для разогрева XLA / mlock weights.
+        m.encode(["warmup"], normalize_embeddings=True, show_progress_bar=False)
+        print(f"[warmup] e5-base ready in {time.time() - t:.1f}s")
+    if needs_rerank:
+        from newscore.embeddings import get_reranker_model
+
+        t = time.time()
+        rr = get_reranker_model()
+        rr.predict([("q", "d")], batch_size=1, show_progress_bar=False)
+        print(f"[warmup] bge-reranker-v2-m3 ready in {time.time() - t:.1f}s")
 
 
 @app.command("briefing")
