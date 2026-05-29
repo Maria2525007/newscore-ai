@@ -32,6 +32,10 @@ class BriefingRequest:
     matcher_name: Literal["embedding", "bm25", "hybrid", "rerank"]
     trace: bool
     run_id: str
+    # Full-result cache (Redis): идентичный запрос за TTL_BRIEF (~3 мин)
+    # возвращается мгновенно, без parse/match. Безопасно для one-shot CLI
+    # и demo на защите. Для theme runs выключено (дельтинг требует свежести).
+    use_result_cache: bool = False
 
 
 @dataclass
@@ -59,6 +63,32 @@ class BriefingOrchestrator:
             top_n=req.top_n,
             days=req.freshness_days,
         )
+
+        # 0a. Full-result cache (opt-in): идентичный запрос за TTL_BRIEF →
+        # мгновенный ответ без parse/match. Только при use_result_cache.
+        rc = None
+        bkey = None
+        if req.use_result_cache:
+            from newscore import redis_cache
+
+            rc = redis_cache.get_cache()
+            if rc.enabled:
+                bkey = redis_cache.brief_key(
+                    req.query, req.matcher_name, req.freshness_days, req.top_n
+                )
+                cached = rc.get_str(bkey)
+                if cached:
+                    try:
+                        result = BriefingResult.model_validate_json(cached)
+                        # свежий run_id, чтобы trace/логи не путались
+                        result.meta.run_id = run_id
+                        log.info("briefing_cache_hit", run_id=run_id)
+                        return result
+                    except Exception as exc:  # noqa: BLE001
+                        log.warning(
+                            "briefing_cache_decode_failed",
+                            err=type(exc).__name__,
+                        )
 
         # 0. Domain pre-check (до fetch — экономит 2-5 сек на нерелевантных запросах)
         if self.deps.domain_checker is not None:
@@ -204,6 +234,20 @@ class BriefingOrchestrator:
         )
         result = BriefingResult(query=req.query, items=matches, meta=meta)
         self.deps.repository.save_run(result)
+
+        # Сохраняем в result-cache только успешные ответы (reason == ok),
+        # чтобы не закэшировать пустоту от временного сбоя источников.
+        if rc is not None and rc.enabled and bkey is not None and reason == "ok":
+            from newscore import redis_cache
+
+            try:
+                rc.set_str(
+                    bkey, result.model_dump_json(), redis_cache.TTL_BRIEF
+                )
+            except Exception as exc:  # noqa: BLE001
+                log.warning(
+                    "briefing_cache_store_failed", err=type(exc).__name__
+                )
 
         if self.deps.trace_writer:
             self.deps.trace_writer.finalize(result)

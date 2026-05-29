@@ -104,6 +104,13 @@ def web_cmd(
         "--default-matcher. Полезно на GPU: грузим всё в VRAM сразу, "
         "чтобы любой выбранный в UI матчер был в боевой готовности.",
     ),
+    redis_url: str = typer.Option(
+        "",
+        "--redis-url",
+        help="Redis для многоуровневого кэша (body/emb/rerank/result). "
+        "Пусто → берётся env REDIS_URL; если и его нет — кэш отключён "
+        "(graceful fallback, работает как без Redis).",
+    ),
 ) -> None:
     """Запустить web-интерфейс в браузере (Step 2)."""
     import uvicorn
@@ -112,6 +119,15 @@ def web_cmd(
     from newscore.embeddings import DeviceUnavailable, resolve_device
 
     configure(level=log_level, fmt="console")
+
+    # Инициализация кэша до warmup: явный --redis-url бьёт env REDIS_URL.
+    from newscore import redis_cache
+
+    if redis_url:
+        redis_cache.set_cache(redis_cache.RedisCache(url=redis_url))
+    cache = redis_cache.get_cache()
+    print(f"[cache] redis = {'enabled' if cache.enabled else 'disabled'}")
+
     try:
         dev = resolve_device(device)
     except DeviceUnavailable as exc:
@@ -232,6 +248,7 @@ def briefing(
         matcher_name=matcher.value,
         trace=trace,
         run_id=run_id,
+        use_result_cache=True,  # one-shot: повтор того же запроса мгновенный
     )
     result = orch.run(req)
 

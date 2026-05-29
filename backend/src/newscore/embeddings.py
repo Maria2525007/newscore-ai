@@ -147,22 +147,54 @@ def get_reranker_model(
     return _RERANKER_CACHE[cache_key]
 
 
-def get_cached_passage_emb(model_name: str, url: str):
-    """Вернуть закэшированный passage embedding или None."""
-    key = (model_name, url)
+# e5-base dim — для валидации Redis-blob'ов. Mismatch → переэнкод.
+_E5_DIM = 768
+
+
+def get_cached_passage_emb(model_name: str, key_id: str):
+    """Вернуть passage embedding из L1 (in-memory) или L2 (Redis).
+
+    key_id — content_hash статьи (не url): меняется при изменении текста,
+    что даёт корректную инвалидацию. L1-miss проверяет L2-Redis и поднимает
+    найденное в L1 (read-through).
+    """
+    key = (model_name, key_id)
     emb = _PASSAGE_CACHE.get(key)
     if emb is not None:
         _PASSAGE_CACHE.move_to_end(key)  # LRU bump
-    return emb
+        return emb
+
+    # L2: Redis (переживает рестарт, шарится между процессами).
+    from newscore import redis_cache
+
+    rc = redis_cache.get_cache()
+    if rc.enabled:
+        rkey = redis_cache.emb_key(model_name, key_id)
+        emb = rc.get_emb(rkey, _E5_DIM)
+        if emb is not None:
+            # поднимаем в L1, но без повторной записи в L2
+            _PASSAGE_CACHE[key] = emb
+            _PASSAGE_CACHE.move_to_end(key)
+            while len(_PASSAGE_CACHE) > _PASSAGE_CACHE_MAX:
+                _PASSAGE_CACHE.popitem(last=False)
+            return emb
+    return None
 
 
-def cache_passage_emb(model_name: str, url: str, emb) -> None:
-    """Сохранить embedding в LRU-кэш; вытеснить старейший при превышении лимита."""
-    key = (model_name, url)
+def cache_passage_emb(model_name: str, key_id: str, emb) -> None:
+    """Записать embedding в L1 (in-memory LRU) + L2 (Redis, если включён)."""
+    key = (model_name, key_id)
     _PASSAGE_CACHE[key] = emb
     _PASSAGE_CACHE.move_to_end(key)
     while len(_PASSAGE_CACHE) > _PASSAGE_CACHE_MAX:
         _PASSAGE_CACHE.popitem(last=False)
+
+    from newscore import redis_cache
+
+    rc = redis_cache.get_cache()
+    if rc.enabled:
+        rkey = redis_cache.emb_key(model_name, key_id)
+        rc.set_emb(rkey, emb, redis_cache.TTL_EMB)
 
 
 def passage_cache_stats() -> dict[str, int]:

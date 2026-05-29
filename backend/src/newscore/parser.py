@@ -167,6 +167,16 @@ class FeedParser:
     async def _aretry_get_rss(
         self, src: SourceConfig, ahttp: httpx.AsyncClient
     ) -> bytes:
+        # Feed cache (короткий TTL): на повторных run/refresh не бьём RSS.
+        from newscore import redis_cache
+
+        rc = redis_cache.get_cache()
+        fkey = redis_cache.feed_key(str(src.rss_url))
+        if rc.enabled:
+            cached = await asyncio.to_thread(rc.get_bytes, fkey)
+            if cached is not None:
+                return cached
+
         async for attempt in AsyncRetrying(
             stop=stop_after_attempt(self.cfg.retry_attempts + 1),
             wait=wait_exponential_jitter(
@@ -184,6 +194,11 @@ class FeedParser:
                 )
                 resp.raise_for_status()
                 content: bytes = resp.content
+
+        if rc.enabled and content:
+            await asyncio.to_thread(
+                rc.set_bytes, fkey, content, redis_cache.TTL_FEED
+            )
         return content
 
     async def _enrich_async(
@@ -203,13 +218,31 @@ class FeedParser:
                 out.append(self._build_enriched(raw, body, src))
             return out
 
+        # Body cache: отдельная новость по URL почти не меняется после
+        # публикации, а HTTP GET полной страницы + trafilatura.extract —
+        # самая дорогая часть parse-фазы. Кэшируем body на TTL_BODY (~24h).
+        from newscore import redis_cache
+
+        rc = redis_cache.get_cache()
+
         async def bound(raw: RawArticle) -> EnrichedArticle:
+            bkey = redis_cache.body_key(str(raw.url))
+            if rc.enabled:
+                cached = await asyncio.to_thread(rc.get_str, bkey)
+                if cached is not None:
+                    # Пустая строка-маркер = «уже пытались, body нет»
+                    # (не долбим paywall/404 повторно весь TTL).
+                    return self._build_enriched(raw, cached or None, src)
             async with sem:
                 try:
                     body = await extractor.aextract(raw, ahttp)
                 except Exception:
                     # одна статья — не блокер, body=None
                     body = None
+            if rc.enabled:
+                await asyncio.to_thread(
+                    rc.set_str, bkey, body or "", redis_cache.TTL_BODY
+                )
             return self._build_enriched(raw, body, src)
 
         results = await asyncio.gather(

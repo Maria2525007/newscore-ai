@@ -105,20 +105,27 @@ class EmbeddingMatcher:
         return matches
 
     def _encode_passages_cached(self, model, articles: list[EnrichedArticle]):
-        """Encode только cache-miss articles; для остальных — вернуть из LRU."""
+        """Encode только cache-miss articles; для остальных — вернуть из кэша.
+
+        Ключ кэша = content_hash(title, body, snippet): меняется при
+        изменении текста статьи → корректная инвалидация. Если статья та же —
+        embedding берётся из L1 (in-memory) или L2 (Redis), без переэнкода.
+        """
         from newscore.embeddings import (
             cache_passage_emb,
             get_cached_passage_emb,
         )
+        from newscore.redis_cache import content_hash
 
         n = len(articles)
-        # Заранее аллоцируем матрицу под все embeddings.
         result: list = [None] * n
+        hashes = [
+            content_hash(a.title, a.body, a.snippet) for a in articles
+        ]
         miss_idx: list[int] = []
         miss_passages: list[str] = []
         for i, a in enumerate(articles):
-            url = str(a.url)
-            cached = get_cached_passage_emb(self.model_name, url)
+            cached = get_cached_passage_emb(self.model_name, hashes[i])
             if cached is not None:
                 result[i] = cached
             else:
@@ -133,9 +140,9 @@ class EmbeddingMatcher:
                 batch_size=16,
             )
             new_embs = np.asarray(new_embs)
-            for slot, (i, emb) in enumerate(zip(miss_idx, new_embs)):
+            for i, emb in zip(miss_idx, new_embs):
                 result[i] = emb
-                cache_passage_emb(self.model_name, str(articles[i].url), emb)
+                cache_passage_emb(self.model_name, hashes[i], emb)
 
         return np.asarray(result)
 
@@ -434,16 +441,57 @@ class RerankMatcher:
         candidates = self.base.rank(query, articles, top_n=self.n_candidates)
         if not candidates:
             return []
-        model = self._ensure_model()
-        pairs = [
-            (query, self._pair_text(m.article, self.body_chars))
-            for m in candidates
+
+        # Cross-encoder score = f(query, passage) НЕ зависит от корпуса (в
+        # отличие от BM25-IDF/RRF-рангов), поэтому кэшируем per (query, pair).
+        # pair_text = title + body[:N] → если статья не изменилась и query
+        # тот же, берём score из Redis, НЕ прогоняем cross-encoder (главный
+        # CPU-затык: ~50ms/пара). Это и есть «не матчить заново ту же новость».
+        import struct
+
+        from newscore import redis_cache
+
+        rc = redis_cache.get_cache()
+        pair_texts = [
+            self._pair_text(m.article, self.body_chars) for m in candidates
         ]
-        scores = model.predict(
-            pairs,
-            batch_size=self.batch_size,
-            show_progress_bar=False,
-        )
+        scores: list[float | None] = [None] * len(candidates)
+        miss_idx: list[int] = []
+
+        if rc.enabled:
+            keys = [
+                redis_cache.rerank_key(self.model_name, query, pt)
+                for pt in pair_texts
+            ]
+            blobs = rc.mget_bytes(keys)
+            for i, b in enumerate(blobs):
+                if b is not None and len(b) == 4:
+                    scores[i] = struct.unpack("f", b)[0]
+                else:
+                    miss_idx.append(i)
+        else:
+            miss_idx = list(range(len(candidates)))
+
+        if miss_idx:
+            model = self._ensure_model()
+            miss_pairs = [(query, pair_texts[i]) for i in miss_idx]
+            new_scores = model.predict(
+                miss_pairs,
+                batch_size=self.batch_size,
+                show_progress_bar=False,
+            )
+            for j, i in enumerate(miss_idx):
+                s = float(new_scores[j])
+                scores[i] = s
+                if rc.enabled:
+                    rc.set_float(
+                        redis_cache.rerank_key(
+                            self.model_name, query, pair_texts[i]
+                        ),
+                        s,
+                        redis_cache.TTL_RERANK,
+                    )
+
         scored = sorted(
             zip(candidates, scores),
             key=lambda cs: -float(cs[1]),

@@ -243,3 +243,80 @@ def test_all_sources_fail_returns_empty_corpus() -> None:
     assert len(report.failed_sources) == 2
     # partial=True iff some succeeded; здесь ноль успехов → False
     assert report.partial is False
+
+
+@respx.mock
+def test_body_and_feed_cache_skip_repeat_http(monkeypatch) -> None:
+    """Второй collect с тем же Redis-кэшем не делает HTTP (feed+body из кэша)."""
+    import fakeredis
+
+    from newscore import redis_cache
+
+    fake = redis_cache.RedisCache.__new__(redis_cache.RedisCache)
+    fake._client = fakeredis.FakeRedis()
+    fake._enabled = True
+    fake._url = "redis://fake"
+    redis_cache.set_cache(fake)
+    try:
+        sources = [_src("a", "https://a.example/rss")]
+        rss_route = respx.get("https://a.example/rss").mock(
+            return_value=httpx.Response(
+                200, content=_rss(_item("Новость", "https://a.example/news/1"))
+            )
+        )
+        body_route = respx.get("https://a.example/news/1").mock(
+            return_value=httpx.Response(200, text=HTML_OK)
+        )
+
+        cfg = _make_cfg(sources)
+        # 1-й прогон — оба endpoint'а вызываются, заполняем кэш.
+        r1 = FeedParser(cfg).collect(sources, freshness_days=7)
+        assert len(r1.articles) == 1
+        assert r1.articles[0].body_extracted is True
+        assert rss_route.call_count == 1
+        assert body_route.call_count == 1
+
+        # 2-й прогон — feed + body уже в кэше → HTTP не дёргается повторно.
+        r2 = FeedParser(cfg).collect(sources, freshness_days=7)
+        assert len(r2.articles) == 1
+        assert r2.articles[0].body_extracted is True
+        assert rss_route.call_count == 1  # не вырос
+        assert body_route.call_count == 1  # не вырос
+    finally:
+        redis_cache.reset_cache()
+
+
+@respx.mock
+def test_body_cache_negative_marker_no_refetch(monkeypatch) -> None:
+    """Если body не извлёкся (paywall/404) — маркер не даёт долбить повторно."""
+    import fakeredis
+
+    from newscore import redis_cache
+
+    fake = redis_cache.RedisCache.__new__(redis_cache.RedisCache)
+    fake._client = fakeredis.FakeRedis()
+    fake._enabled = True
+    fake._url = "redis://fake"
+    redis_cache.set_cache(fake)
+    try:
+        sources = [_src("a", "https://a.example/rss")]
+        respx.get("https://a.example/rss").mock(
+            return_value=httpx.Response(
+                200, content=_rss(_item("Новость", "https://a.example/news/1"))
+            )
+        )
+        body_route = respx.get("https://a.example/news/1").mock(
+            return_value=httpx.Response(404)
+        )
+
+        cfg = _make_cfg(sources)
+        r1 = FeedParser(cfg).collect(sources, freshness_days=7)
+        assert r1.articles[0].body_extracted is False
+        assert body_route.call_count == 1
+
+        r2 = FeedParser(cfg).collect(sources, freshness_days=7)
+        assert r2.articles[0].body_extracted is False
+        # негативный маркер в кэше → повторного GET статьи нет
+        assert body_route.call_count == 1
+    finally:
+        redis_cache.reset_cache()

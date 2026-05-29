@@ -184,3 +184,71 @@ def test_rerank_with_explicit_embedding_base() -> None:
     rm = RerankMatcher(base=base, _model=fake)
     matches = rm.rank("q", [a, b], top_n=2)
     assert str(matches[0].article.url) == "https://a.example/a"
+
+
+def test_rerank_score_cache_skips_repeat_predict() -> None:
+    """Второй rank с тем же query+articles не зовёт reranker.predict (Redis hit)."""
+    import fakeredis
+
+    from newscore import redis_cache
+
+    fake = redis_cache.RedisCache.__new__(redis_cache.RedisCache)
+    fake._client = fakeredis.FakeRedis()
+    fake._enabled = True
+    fake._url = "redis://fake"
+    redis_cache.set_cache(fake)
+    try:
+        a = _article("https://a.example/a", "topic a", "тело a")
+        b = _article("https://a.example/b", "topic b", "тело b")
+        base = _FakeBase([a, b])
+        fake_rr = _FakeReranker(
+            {"topic a. тело a": 0.9, "topic b. тело b": 0.3}
+        )
+        rm = RerankMatcher(base=base, n_candidates=10, _model=fake_rr)
+
+        # 1-й прогон — predict вызывается один раз на 2 пары.
+        r1 = rm.rank("курс валют", [a, b], top_n=2)
+        assert str(r1[0].article.url) == "https://a.example/a"
+        assert len(fake_rr.calls) == 1
+        assert len(fake_rr.calls[0]) == 2  # обе пары прогнаны
+
+        # 2-й прогон — scores в Redis → predict НЕ вызывается.
+        r2 = rm.rank("курс валют", [a, b], top_n=2)
+        assert str(r2[0].article.url) == "https://a.example/a"
+        assert r2[0].score == pytest.approx(0.9, abs=1e-5)
+        assert len(fake_rr.calls) == 1  # не вырос — всё из кэша
+    finally:
+        redis_cache.reset_cache()
+
+
+def test_rerank_cache_partial_miss_only_predicts_new() -> None:
+    """Если одна статья новая — predict зовётся только на неё."""
+    import fakeredis
+
+    from newscore import redis_cache
+
+    fake = redis_cache.RedisCache.__new__(redis_cache.RedisCache)
+    fake._client = fakeredis.FakeRedis()
+    fake._enabled = True
+    fake._url = "redis://fake"
+    redis_cache.set_cache(fake)
+    try:
+        a = _article("https://a.example/a", "topic a", "тело a")
+        b = _article("https://a.example/b", "topic b", "тело b")
+        base_ab = _FakeBase([a, b])
+        rr = _FakeReranker({"topic a. тело a": 0.9, "topic b. тело b": 0.3})
+        rm = RerankMatcher(base=base_ab, n_candidates=10, _model=rr)
+        rm.rank("q", [a, b], top_n=2)
+        assert len(rr.calls[-1]) == 2
+
+        # добавляем новую статью c — a,b из кэша, только c прогоняется
+        c = _article("https://a.example/c", "topic c", "тело c")
+        rr.scores_by_text["topic c. тело c"] = 0.7
+        base_abc = _FakeBase([a, b, c])
+        rm2 = RerankMatcher(base=base_abc, n_candidates=10, _model=rr)
+        rm2.rank("q", [a, b, c], top_n=3)
+        # последний вызов predict — только 1 пара (c)
+        assert len(rr.calls[-1]) == 1
+        assert rr.calls[-1][0][1] == "topic c. тело c"
+    finally:
+        redis_cache.reset_cache()

@@ -78,6 +78,38 @@ exit 1 и понятным сообщением, а не уезжает молч
 
 **GPU-режим.** sentence-transformers сам сядет на CUDA (`--device auto` → `cuda` если доступна). При старте `--warmup-all` грузит e5 + bge-reranker-v2-m3 в видеопамять и держит резидентно между запросами; reranker автоматически в fp16 (2× быстрее, 2× меньше VRAM). Лог при старте покажет `[device] torch device = cuda` и `[vram] <GPU>: allocated X GB`. Принудительно CPU: `--device cpu` или env `NEWSCORE_DEVICE=cpu`.
 
+### Кэш (Redis) — ускорение для прода/защиты
+
+Опциональный многоуровневый кэш. **Без Redis всё работает как раньше** (graceful fallback).
+Включается заданием `REDIS_URL` (или `--redis-url`):
+
+```bash
+# поднять Redis (Docker)
+docker run -d --name nc-redis -p 6379:6379 redis:7-alpine
+
+export REDIS_URL=redis://localhost:6379/0
+uv run newscore web --device cuda --default-matcher rerank --warmup-all
+# в логе старта: [cache] redis = enabled
+```
+
+Что кэшируется (TTL подобраны «средне-агрессивно»):
+
+| Слой | Ключ | TTL | Эффект |
+|---|---|---|---|
+| RSS feed | `nc:feed:*` | 90 с | повторный refresh не бьёт источник |
+| Article body | `nc:body:*` | 24 ч | не фетчим+парсим ту же новость дважды (самое дорогое в parse) |
+| Passage embedding | `nc:emb:*` | 24 ч | не перекодируем неизменившуюся статью (L1 in-memory + L2 Redis) |
+| Rerank score | `nc:rr:*` | 6 ч | **не прогоняем cross-encoder повторно** на той же паре (query, статья) — снимает главный CPU-затык |
+| Briefing result | `nc:brief:*` | 3 мин | идентичный one-shot запрос — мгновенно |
+
+Инвалидация — по content-hash: если текст статьи изменился, ключ меняется → пересчёт. Если нет — переиспользуется готовый результат (тот же score, без матчинга заново).
+
+Тюнинг параллелизма парсинга под железо (без правки YAML):
+```bash
+export NEWSCORE_FETCH_TOTAL=64       # одновременных HTTP-соединений (default 64)
+export NEWSCORE_FETCH_PER_HOST=10    # на один источник (default 10)
+```
+
 ---
 
 ## Output брифинга (one-shot)
