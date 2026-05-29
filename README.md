@@ -61,11 +61,18 @@ uv run newscore daemon                                # фон, обновляе
 
 ### Step 2 — web
 
-```
+```bash
+# CPU-сервер (default matcher = hybrid, ~1-2с/run)
 uv run newscore web --host 127.0.0.1 --port 8000
+
+# GPU-машина: всё в VRAM + rerank в боевой готовности (~0.1-0.3с/run)
+uv sync --extra cu128
+uv run newscore web --device cuda --default-matcher rerank --warmup-all
 ```
 
 Создать тему через форму, посмотреть последний брифинг, запустить вручную, поставить на паузу — всё в браузере. Без авторизации, single-user локально. WAL-режим SQLite позволяет одновременно держать `web` и `daemon`.
+
+**GPU-режим.** sentence-transformers сам сядет на CUDA (`--device auto` → `cuda` если доступна). При старте `--warmup-all` грузит e5 + bge-reranker-v2-m3 в видеопамять и держит резидентно между запросами; reranker автоматически в fp16 (2× быстрее, 2× меньше VRAM). Лог при старте покажет `[device] torch device = cuda` и `[vram] <GPU>: allocated X GB`. Принудительно CPU: `--device cpu` или env `NEWSCORE_DEVICE=cpu`.
 
 ---
 

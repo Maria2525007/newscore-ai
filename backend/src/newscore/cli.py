@@ -91,30 +91,55 @@ def web_cmd(
         help="Прогреть ML-модели на старте (e5 ~7s + reranker ~4s). "
         "Без этого первый запрос темы ждёт холодную загрузку.",
     ),
+    device: str = typer.Option(
+        "auto",
+        "--device",
+        help="torch device: auto (cuda→mps→cpu) | cuda | cuda:0 | mps | cpu. "
+        "На GPU-машине auto сам выберет cuda. Также env NEWSCORE_DEVICE.",
+    ),
+    warmup_all: bool = typer.Option(
+        False,
+        "--warmup-all",
+        help="Прогреть ВСЕ ML-модели (e5 + reranker) независимо от "
+        "--default-matcher. Полезно на GPU: грузим всё в VRAM сразу, "
+        "чтобы любой выбранный в UI матчер был в боевой готовности.",
+    ),
 ) -> None:
     """Запустить web-интерфейс в браузере (Step 2)."""
     import uvicorn
 
     from newscore.web import create_app
+    from newscore.embeddings import resolve_device
 
     configure(level=log_level, fmt="console")
+    dev = resolve_device(device)
+    print(f"[device] torch device = {dev}")
     if warmup:
-        _warmup_models(default_matcher)
+        _warmup_models(default_matcher, device=dev, warmup_all=warmup_all)
     service = _build_service(db, config)
     app_ = create_app(service, default_matcher=default_matcher)
     uvicorn.run(app_, host=host, port=port, log_level=log_level.lower())
 
 
-def _warmup_models(default_matcher: str) -> None:
+def _warmup_models(
+    default_matcher: str, device: str = "auto", warmup_all: bool = False
+) -> None:
     """Eager-init ML моделей чтобы первый user request не ждал cold load.
 
     e5-base: 7s холодный → 0.02s горячий запрос.
     bge-reranker-v2-m3: 4s холодный → доступ к pre-loaded weights.
+
+    На CUDA модели остаются резидентными в VRAM (sentence-transformers
+    держит их на device между запросами). warmup_all=True грузит обе
+    модели независимо от default_matcher — «всё в боевой готовности».
     """
     import time
 
-    needs_e5 = default_matcher in {"embedding", "hybrid", "rerank"}
-    needs_rerank = default_matcher == "rerank"
+    on_cuda = device.startswith("cuda")
+    # На GPU имеет смысл грузить всё сразу (VRAM есть); warmup_all форсит это.
+    load_all = warmup_all or on_cuda
+    needs_e5 = load_all or default_matcher in {"embedding", "hybrid", "rerank"}
+    needs_rerank = load_all or default_matcher == "rerank"
     if not (needs_e5 or needs_rerank):
         return
 
@@ -122,17 +147,40 @@ def _warmup_models(default_matcher: str) -> None:
         from newscore.embeddings import get_st_model
 
         t = time.time()
-        m = get_st_model("intfloat/multilingual-e5-base")
-        # Прогон tiny encode для разогрева XLA / mlock weights.
+        m = get_st_model("intfloat/multilingual-e5-base", device=device)
+        # Прогон tiny encode для разогрева CUDA-контекста / mlock weights.
         m.encode(["warmup"], normalize_embeddings=True, show_progress_bar=False)
-        print(f"[warmup] e5-base ready in {time.time() - t:.1f}s")
+        print(f"[warmup] e5-base ready on {device} in {time.time() - t:.1f}s")
     if needs_rerank:
         from newscore.embeddings import get_reranker_model
 
         t = time.time()
-        rr = get_reranker_model()
+        rr = get_reranker_model(device=device)
         rr.predict([("q", "d")], batch_size=1, show_progress_bar=False)
-        print(f"[warmup] bge-reranker-v2-m3 ready in {time.time() - t:.1f}s")
+        print(
+            f"[warmup] bge-reranker-v2-m3 ready on {device} "
+            f"in {time.time() - t:.1f}s"
+        )
+
+    if on_cuda:
+        _log_vram()
+
+
+def _log_vram() -> None:
+    """Залогировать занятую/зарезервированную VRAM (только для cuda)."""
+    try:
+        import torch
+
+        if torch.cuda.is_available():
+            alloc = torch.cuda.memory_allocated() / 1024**3
+            reserved = torch.cuda.memory_reserved() / 1024**3
+            name = torch.cuda.get_device_name(0)
+            print(
+                f"[vram] {name}: allocated {alloc:.2f} GB, "
+                f"reserved {reserved:.2f} GB"
+            )
+    except Exception as exc:  # noqa: BLE001
+        print(f"[vram] недоступно: {type(exc).__name__}")
 
 
 @app.command("briefing")
