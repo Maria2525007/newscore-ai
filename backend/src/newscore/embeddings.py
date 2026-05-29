@@ -30,18 +30,26 @@ _PASSAGE_CACHE_MAX = 50_000  # ≈ 150 MB для e5-base 768-float32
 _DEVICE: str | None = None
 
 
+class DeviceUnavailable(RuntimeError):
+    """Явно запрошенный device (cuda/mps) недоступен — fail-fast."""
+
+
 def resolve_device(prefer: str | None = None) -> str:
     """Определить torch device: cuda → mps → cpu, с возможностью override.
 
     prefer:
-      - None / "auto" — автоопределение (cuda если доступна, иначе mps/cpu)
-      - "cuda" / "cuda:0" / "mps" / "cpu" — явный выбор
-    Override через env NEWSCORE_DEVICE имеет приоритет над автоопределением,
-    но prefer (явный аргумент CLI) бьёт env.
+      - None / "auto" — автоопределение (cuda если доступна, иначе mps/cpu).
+        Молча деградирует до cpu — никогда не падает.
+      - "cuda" / "cuda:0" / "mps" — ЯВНЫЙ выбор: если устройство недоступно,
+        бросаем DeviceUnavailable (fail-fast, без молчаливого отката на cpu).
+      - "cpu" — всегда доступен.
+    Override через env NEWSCORE_DEVICE; явный аргумент CLI (prefer) бьёт env.
     """
     global _DEVICE
+
+    # Явный выбор из аргумента имеет приоритет над всем.
     if prefer and prefer != "auto":
-        _DEVICE = prefer
+        _DEVICE = _validate_device(prefer)
         return _DEVICE
 
     if _DEVICE is not None:
@@ -51,7 +59,7 @@ def resolve_device(prefer: str | None = None) -> str:
 
     env = os.environ.get("NEWSCORE_DEVICE")
     if env and env != "auto":
-        _DEVICE = env
+        _DEVICE = _validate_device(env)
         return _DEVICE
 
     import torch
@@ -63,6 +71,29 @@ def resolve_device(prefer: str | None = None) -> str:
     else:
         _DEVICE = "cpu"
     return _DEVICE
+
+
+def _validate_device(dev: str) -> str:
+    """Проверить доступность явно запрошенного device; иначе DeviceUnavailable."""
+    import torch
+
+    if dev.startswith("cuda"):
+        if not torch.cuda.is_available():
+            raise DeviceUnavailable(
+                f"запрошен device={dev!r}, но CUDA недоступна "
+                "(torch.cuda.is_available() == False). Проверь nvidia-smi, "
+                "драйвер и что установлен GPU-torch: uv sync --extra cu128. "
+                "Для CPU явно укажи --device cpu или --device auto."
+            )
+        return dev
+    if dev == "mps":
+        if not torch.backends.mps.is_available():
+            raise DeviceUnavailable(
+                f"запрошен device={dev!r}, но MPS (Apple Metal) недоступен."
+            )
+        return dev
+    # cpu и любые прочие — пропускаем как есть (torch сам бросит при загрузке).
+    return dev
 
 
 def get_st_model(name: str, device: str | None = None) -> "SentenceTransformer":

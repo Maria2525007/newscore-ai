@@ -109,10 +109,16 @@ def web_cmd(
     import uvicorn
 
     from newscore.web import create_app
-    from newscore.embeddings import resolve_device
+    from newscore.embeddings import DeviceUnavailable, resolve_device
 
     configure(level=log_level, fmt="console")
-    dev = resolve_device(device)
+    try:
+        dev = resolve_device(device)
+    except DeviceUnavailable as exc:
+        # fail-fast: явно запрошенный --device cuda недоступен — не стартуем
+        # молча на CPU, а падаем с понятным сообщением.
+        print(f"[device] ОШИБКА: {exc}")
+        raise typer.Exit(code=1) from exc
     print(f"[device] torch device = {dev}")
     if warmup:
         _warmup_models(default_matcher, device=dev, warmup_all=warmup_all)
