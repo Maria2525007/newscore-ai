@@ -129,6 +129,8 @@
   </div>
   {% endfor %}
 </div>
+{% elif latest %}
+<p class="no-results-msg">Ничего не найдено по вашему запросу. Попробуйте уточнить или переформулировать его.</p>
 {% endif %}
 
 {% if runs|length > 1 %}

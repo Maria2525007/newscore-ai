@@ -13,6 +13,7 @@ import typer
 
 from newscore.briefing import BriefingDeps, BriefingOrchestrator
 from newscore.config import load_config
+from newscore.domain import DomainChecker
 from newscore.logging import configure
 from newscore.matcher import Bm25Matcher, EmbeddingMatcher, HybridMatcher, Matcher, RerankMatcher
 from newscore.parser import FeedParser
@@ -67,6 +68,7 @@ def _build_service(
         return matchers[name]
 
     summarizer = ExtractiveSummarizer()
+    domain_checker = DomainChecker()
 
     def _orch_factory() -> BriefingOrchestrator:
         cfg = load_config(config_path)
@@ -76,6 +78,7 @@ def _build_service(
             repository=InMemoryRepository(),
             trace_writer=None,
             summarizer=summarizer,
+            domain_checker=domain_checker,
         )
         return BriefingOrchestrator(cfg=cfg, deps=deps)
 

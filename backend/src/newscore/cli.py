@@ -21,6 +21,7 @@ from newscore.briefing import (
     BriefingRequest,
 )
 from newscore.config import load_config
+from newscore.domain import DomainChecker
 from newscore.logging import TraceWriter, configure
 from newscore.matcher import (
     Bm25Matcher,
@@ -167,6 +168,7 @@ def briefing(
         repository=repo,
         trace_writer=tw,
         summarizer=ExtractiveSummarizer() if summary else None,
+        domain_checker=DomainChecker(),
     )
     orch = BriefingOrchestrator(cfg=cfg, deps=deps)
     req = BriefingRequest(

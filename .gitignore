@@ -43,3 +43,6 @@ backend/tests/qualitative/reports/*.md
 dist/
 build/
 *.whl
+
+# runtime web server log
+server.log

@@ -9,14 +9,19 @@ import structlog
 
 from newscore.config import AppConfig
 from newscore.dedupe import dedupe_by_url
+from newscore.domain import DomainChecker
 from newscore.logging import TraceWriter
 from newscore.matcher import Matcher
-from newscore.models import BriefingResult, RunMeta
+from newscore.models import BriefingResult, FailedSource, RunMeta
 from newscore.parser import FeedParser
 from newscore.repository import BriefingRepository
 from newscore.summarizer import Summarizer
 
 log = structlog.get_logger(__name__)
+
+# Минимальный score, ниже которого матч считается нерелевантным «шумом».
+# См. подробный комментарий к шагу 3a (post-match relevance floor).
+_RELEVANCE_FLOOR: dict[str, float] = {"embedding": 0.79, "rerank": 0.05}
 
 
 @dataclass
@@ -36,6 +41,7 @@ class BriefingDeps:
     repository: BriefingRepository
     trace_writer: TraceWriter | None
     summarizer: Summarizer | None = None
+    domain_checker: DomainChecker | None = None
 
 
 class BriefingOrchestrator:
@@ -53,6 +59,41 @@ class BriefingOrchestrator:
             top_n=req.top_n,
             days=req.freshness_days,
         )
+
+        # 0. Domain pre-check (до fetch — экономит 2-5 сек на нерелевантных запросах)
+        if self.deps.domain_checker is not None:
+            relevant, max_sim = self.deps.domain_checker.is_relevant(req.query)
+            if not relevant:
+                log.info(
+                    "domain_check_rejected",
+                    query=req.query[:80],
+                    max_sim=round(max_sim, 4),
+                    threshold=self.deps.domain_checker.threshold,
+                )
+                finished = datetime.now(timezone.utc)
+                meta = RunMeta(
+                    run_id=run_id,
+                    started_at=started,
+                    finished_at=finished,
+                    matcher_name=req.matcher_name,
+                    matcher_version="skipped/domain_check",
+                    sources_snapshot_at=started,
+                    freshness_days=req.freshness_days,
+                    partial=False,
+                    failed_sources=[],
+                    reason="no_relevant_matches",
+                )
+                result = BriefingResult(query=req.query, items=[], meta=meta)
+                self.deps.repository.save_run(result)
+                if self.deps.trace_writer:
+                    self.deps.trace_writer.step(
+                        "domain_check",
+                        relevant=False,
+                        max_sim=round(max_sim, 4),
+                        threshold=self.deps.domain_checker.threshold,
+                    )
+                    self.deps.trace_writer.finalize(result)
+                return result
 
         # 1. Parse + extract bodies
         t = time.time()
@@ -81,6 +122,20 @@ class BriefingOrchestrator:
         t = time.time()
         matcher = self.deps.matcher_factory(req.matcher_name)
         matches = matcher.rank(req.query, unique, req.top_n)
+
+        # 3a. Post-match relevance floor — отсекаем нерелевантный «шум»,
+        # чтобы по запросу-«мусору» сервис не выдавал случайные статьи.
+        # Калибровка по реальному корпусу:
+        #   embedding — релевантные дают top score ≥ 0.79, нерелевантные
+        #               равномерный «шум» 0.74-0.78.
+        #   rerank    — cross-encoder (sigmoid): релевантные 0.30-0.50+,
+        #               нерелевантные ≤ 0.001 (зазор огромный, floor 0.05).
+        # bm25/hybrid floor не задаём: bm25 уже отсекает score ≤ 0, а RRF-скоры
+        # гибрида ранговые и не выражают абсолютную релевантность.
+        floor = _RELEVANCE_FLOOR.get(req.matcher_name)
+        if floor is not None and matches:
+            matches = [m for m in matches if m.score >= floor]
+
         match_ms = int((time.time() - t) * 1000)
         if self.deps.trace_writer:
             self.deps.trace_writer.step(

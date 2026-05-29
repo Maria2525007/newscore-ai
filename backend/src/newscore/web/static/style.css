@@ -650,6 +650,7 @@ mark {
 
 /* ===== MISC ===== */
 .run-empty { color: var(--fg-muted); font-size: 0.88rem; padding: 1.25rem 0; }
+.no-results-msg { color: var(--fg-muted); font-size: 0.9rem; padding: 1.5rem 0; }
 
 /* ===== RESPONSIVE ===== */
 @media (max-width: 640px) {
