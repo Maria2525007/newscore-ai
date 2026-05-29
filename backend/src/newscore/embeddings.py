@@ -23,7 +23,7 @@ _RERANKER_CACHE: dict[str, "CrossEncoder"] = {}
 # Passage embedding cache. key = (model_name, url), value = np.ndarray (unit-norm).
 # LRU через OrderedDict.move_to_end на hit.
 _PASSAGE_CACHE: OrderedDict[tuple[str, str], "np.ndarray"] = OrderedDict()
-_PASSAGE_CACHE_MAX = 50_000  # ≈ 150 MB для e5-base 768-float32
+_PASSAGE_CACHE_MAX = 200_000  # ≈ 600 MB для e5-base 768-float32 (31 GB RAM в запасе)
 
 # Резолвленный device-синглтон. resolve_device() кэширует сюда, чтобы
 # matchers и warmup были консистентны (один и тот же GPU).
