@@ -1,120 +1,135 @@
 # NewsCore AI
 
-> Briefing-first новостной агент. По NL-запросу пользователя («курс валют») собирает релевантные материалы из 5 российских деловых источников, ранжирует embedding-матчером, делает extractive summary 2–3 предложениями.
+> A briefing-first news agent. On a natural-language query ("exchange rate"), it pulls
+> relevant material from 5 Russian business news sources, ranks it with an embedding
+> matcher, and produces a 2–3 sentence extractive summary.
 >
-> Step 0 (CLI-ядро) закрыт. **Step 1–3 в разработке:** темы + scheduler (SQLite), web-интерфейс в браузере (FastAPI), summarizer без LLM API.
+> Step 0 (CLI core) is done. Steps 1–3 (themes + scheduler, browser UI, summarizer)
+> were built for the ITMO defense (2026-05-29) and aren't under active development
+> right now.
+
+My part: product spec, user research (custdev), and the pitch/presentation site — see
+[startup-project](https://github.com/Maria2525007/startup-project).
 
 ---
 
-## Быстрый старт
+## Quick start
 
 ```bash
-# 1. Установка uv (если ещё нет)
+# 1. Install uv (if you don't have it)
 curl -LsSf https://astral.sh/uv/install.sh | sh
 
-# 2. Зависимости — нужно выбрать backend для torch (sentence-transformers зависимость)
-uv sync --extra cpu      # default — VPS / Mac (CPU+MPS) / любая машина без GPU
-# uv sync --extra cu128  # GPU-сервер с CUDA 12.8
+# 2. Dependencies — pick a torch backend (sentence-transformers needs one)
+uv sync --extra cpu      # default — VPS / Mac (CPU+MPS) / any machine without a GPU
+# uv sync --extra cu128  # GPU server with CUDA 12.8
 
-# 3. Брифинг one-shot
-uv run newscore "курс валют"
+# 3. One-shot briefing
+uv run newscore "exchange rate"
 
-# 4. Или: создать тему и открыть в браузере
-uv run newscore theme create "курс валют" --period 30m
+# 4. Or: create a theme and open it in the browser
+uv run newscore theme create "exchange rate" --period 30m
 uv run newscore web                                   # http://127.0.0.1:8000
 ```
 
-Первый запуск загрузит embedding-модель `intfloat/multilingual-e5-base` (~280 МБ) — это 2–3 минуты на средней сети. Дальнейшие запуски — секунды.
+First run downloads the embedding model `intfloat/multilingual-e5-base` (~280 MB) —
+2–3 minutes on an average connection. Later runs take seconds.
 
 ---
 
 ## CLI
 
-### Step 0 — one-shot брифинг
+### Step 0 — one-shot briefing
 
 ```
-uv run newscore "запрос на естественном языке" [опции]
-uv run newscore briefing "запрос" [опции]            # эквивалент
+uv run newscore "natural language query" [options]
+uv run newscore briefing "query" [options]            # equivalent
 
-опции:
-  --matcher embedding|bm25     матчер (default: embedding)
-  --top-n N                    сколько материалов в output (default: 10)
-  --days N                     окно свежести в днях (default: 7)
-  --trace                      trace в traces/<run_id>.json
+options:
+  --matcher embedding|bm25     matcher (default: embedding)
+  --top-n N                    how many items in the output (default: 10)
+  --days N                     freshness window in days (default: 7)
+  --trace                      write a trace to traces/<run_id>.json
   --summary/--no-summary       extractive summary (default: on)
-  --log-format console|json    формат логов в stderr (default: console)
-  --config PATH                путь к sources.yaml
+  --log-format console|json    stderr log format (default: console)
+  --config PATH                path to sources.yaml
 ```
 
-### Step 1 — темы и scheduler
+### Step 1 — themes and scheduler
 
 ```
-uv run newscore theme create "запрос" --period 60m   # 60s|30m|2h|1d
+uv run newscore theme create "query" --period 60m    # 60s|30m|2h|1d
 uv run newscore theme list
 uv run newscore theme show <id>
-uv run newscore theme run <id>                        # вручную сейчас
+uv run newscore theme run <id>                        # run manually now
 uv run newscore theme pause/resume/delete <id>
-uv run newscore daemon                                # фон, обновляет по периоду
+uv run newscore daemon                                # background, refreshes on schedule
 ```
 
-Состояние в `data/newscore.db` (SQLite, ignored из git).
+State lives in `data/newscore.db` (SQLite, gitignored).
 
 ### Step 2 — web
 
 ```bash
-# CPU-сервер (default matcher = hybrid, ~1-2с/run)
+# CPU server (default matcher = hybrid, ~1-2s/run)
 uv run newscore web --host 127.0.0.1 --port 8000
 
-# GPU-машина: всё в VRAM + rerank в боевой готовности (~0.1-0.3с/run)
+# GPU machine: everything in VRAM + rerank ready to go (~0.1-0.3s/run)
 uv sync --extra cu128
 uv run newscore web --device cuda --default-matcher rerank --warmup-all
 ```
 
-`--device cuda` (явный) — **fail-fast**: если CUDA недоступна, процесс падает с
-exit 1 и понятным сообщением, а не уезжает молча на CPU. Для авто-выбора с
-тихим откатом на CPU используй `--device auto` (default).
+`--device cuda` (explicit) is **fail-fast**: if CUDA isn't available the process exits
+1 with a clear error instead of silently falling back to CPU. For auto-select with a
+silent CPU fallback, use `--device auto` (default).
 
-Создать тему через форму, посмотреть последний брифинг, запустить вручную, поставить на паузу — всё в браузере. Без авторизации, single-user локально. WAL-режим SQLite позволяет одновременно держать `web` и `daemon`.
+Create a theme via a form, view the latest briefing, run it manually, pause it — all
+in the browser. No auth, single-user, local. SQLite runs in WAL mode so `web` and
+`daemon` can run at the same time.
 
-**GPU-режим.** sentence-transformers сам сядет на CUDA (`--device auto` → `cuda` если доступна). При старте `--warmup-all` грузит e5 + bge-reranker-v2-m3 в видеопамять и держит резидентно между запросами; reranker автоматически в fp16 (2× быстрее, 2× меньше VRAM). Лог при старте покажет `[device] torch device = cuda` и `[vram] <GPU>: allocated X GB`. Принудительно CPU: `--device cpu` или env `NEWSCORE_DEVICE=cpu`.
+**GPU mode.** sentence-transformers picks up CUDA on its own (`--device auto` → `cuda`
+if available). `--warmup-all` loads e5 + bge-reranker-v2-m3 into VRAM at startup and
+keeps them resident between requests; the reranker runs in fp16 automatically (2x
+faster, half the VRAM). Startup logs show `[device] torch device = cuda` and
+`[vram] <GPU>: allocated X GB`. Force CPU with `--device cpu` or `NEWSCORE_DEVICE=cpu`.
 
-### Кэш (Redis) — ускорение для прода/защиты
+### Cache (Redis) — speeds up prod/defense runs
 
-Опциональный многоуровневый кэш. **Без Redis всё работает как раньше** (graceful fallback).
-Включается заданием `REDIS_URL` (или `--redis-url`):
+Optional multi-layer cache. **Everything works without Redis** (graceful fallback).
+Enabled by setting `REDIS_URL` (or `--redis-url`):
 
 ```bash
-# поднять Redis (Docker)
+# start Redis (Docker)
 docker run -d --name nc-redis -p 6379:6379 redis:7-alpine
 
 export REDIS_URL=redis://localhost:6379/0
 uv run newscore web --device cuda --default-matcher rerank --warmup-all
-# в логе старта: [cache] redis = enabled
+# startup log shows: [cache] redis = enabled
 ```
 
-Что кэшируется (TTL подобраны «средне-агрессивно»):
+What's cached (TTLs tuned to "moderately aggressive"):
 
-| Слой | Ключ | TTL | Эффект |
+| Layer | Key | TTL | Effect |
 |---|---|---|---|
-| RSS feed | `nc:feed:*` | 90 с | повторный refresh не бьёт источник |
-| Article body | `nc:body:*` | 24 ч | не фетчим+парсим ту же новость дважды (самое дорогое в parse) |
-| Passage embedding | `nc:emb:*` | 24 ч | не перекодируем неизменившуюся статью (L1 in-memory + L2 Redis) |
-| Rerank score | `nc:rr:*` | 6 ч | **не прогоняем cross-encoder повторно** на той же паре (query, статья) — снимает главный CPU-затык |
-| Briefing result | `nc:brief:*` | 3 мин | идентичный one-shot запрос — мгновенно |
+| RSS feed | `nc:feed:*` | 90s | a repeat refresh doesn't hit the source again |
+| Article body | `nc:body:*` | 24h | don't fetch+parse the same article twice (the most expensive parse step) |
+| Passage embedding | `nc:emb:*` | 24h | don't re-embed an unchanged article (L1 in-memory + L2 Redis) |
+| Rerank score | `nc:rr:*` | 6h | **don't re-run the cross-encoder** on the same (query, article) pair — the main CPU bottleneck |
+| Briefing result | `nc:brief:*` | 3min | an identical one-shot query returns instantly |
 
-Инвалидация — по content-hash: если текст статьи изменился, ключ меняется → пересчёт. Если нет — переиспользуется готовый результат (тот же score, без матчинга заново).
+Invalidation is by content hash: if an article's text changed, the key changes and it
+gets recomputed. Otherwise the cached result (same score, no re-matching) is reused.
 
-Тюнинг параллелизма парсинга под железо (без правки YAML):
+Tune fetch parallelism to your hardware without touching YAML:
 ```bash
-export NEWSCORE_FETCH_TOTAL=64       # одновременных HTTP-соединений (default 64)
-export NEWSCORE_FETCH_PER_HOST=10    # на один источник (default 10)
+export NEWSCORE_FETCH_TOTAL=64       # concurrent HTTP connections (default 64)
+export NEWSCORE_FETCH_PER_HOST=10    # per source (default 10)
 ```
 
 ---
 
-## Output брифинга (one-shot)
+## Briefing output (one-shot)
 
-JSON в stdout. Схема:
+JSON on stdout:
 
 ```json
 {
@@ -124,7 +139,7 @@ JSON в stdout. Схема:
       "article": {
         "title": "...", "url": "...", "source": "rbc",
         "published_at": "...", "snippet": "...",
-        "body": "...", "summary": "2-3 ключевых предложения."
+        "body": "...", "summary": "2-3 key sentences."
       },
       "score": 0.87
     }
@@ -134,62 +149,67 @@ JSON в stdout. Схема:
 }
 ```
 
-Полная схема — `raw/step0-architecture.md` §3.4.
+Full schema — `raw/step0-architecture.md` §3.4.
 
 ---
 
-## Структура
+## Structure
 
-| Папка | Содержимое |
+| Folder | Contents |
 |---|---|
-| `backend/src/newscore/` | Python-пакет: CLI, парсер, матчер, оркестратор, summarizer |
+| `backend/src/newscore/` | Python package: CLI, parser, matcher, orchestrator, summarizer |
 | `backend/src/newscore/themes/` | Step 1: SQLite + ThemeService + AsyncScheduler |
 | `backend/src/newscore/web/` | Step 2: FastAPI + Jinja2 templates |
 | `backend/tests/` | `unit/` / `integration/` / `qualitative/` / `e2e/` (114 + 6 Playwright) |
-| `configs/sources.yaml` | Конфиг 5 RSS-источников |
-| `data/` | SQLite база (ignored) |
+| `configs/sources.yaml` | Config for the 5 RSS sources |
+| `data/` | SQLite database (gitignored) |
 | `raw/` | Spec, architecture, brief, roadmap, baseline |
-| `frontend/`, `infra/` | Заглушки для Step 4+ |
+| `frontend/`, `infra/` | Stubs for Step 4+ |
 
 ---
 
-## Документы
+## Docs
 
-Все ключевые решения зафиксированы в `raw/`:
+Key decisions are written up in `raw/`:
 
-- `mvp-brief.md` — что строим (v3)
-- `step0-spec.md` — формальная спецификация (user stories, MoSCoW, NFR)
-- `step0-architecture.md` — архитектура Step 0 + 17 ADR
-- `step0-qual-baseline.md` — результаты qual-eval, обоснование DoD pivot
-- `step1-architecture.md` — Step 1 (SQLite + scheduler) + 6 ADR
-- `roadmap.md` — что наслаивается дальше (Step 4–5)
+- `mvp-brief.md` — what we're building (v3)
+- `step0-spec.md` — formal spec (user stories, MoSCoW, NFRs)
+- `step0-architecture.md` — Step 0 architecture + 17 ADRs
+- `step0-qual-baseline.md` — qual-eval results, DoD pivot rationale
+- `step1-architecture.md` — Step 1 (SQLite + scheduler) + 6 ADRs
+- `roadmap.md` — what layers on next (Step 4–5)
 
 ---
 
-## Стек
+## Stack
 
-| Слой | Что |
+| Layer | What |
 |---|---|
-| Runtime | Python 3.11+ через `uv` |
-| HTTP | `httpx.AsyncClient` (async fetch с per-source semaphores) |
+| Runtime | Python 3.11+ via `uv` |
+| HTTP | `httpx.AsyncClient` (async fetch with per-source semaphores) |
 | RSS | `feedparser` |
-| Body | `trafilatura` через `asyncio.to_thread` |
+| Body extraction | `trafilatura` via `asyncio.to_thread` |
 | Embedding | `sentence-transformers` + `intfloat/multilingual-e5-base` |
-| BM25 | `rank_bm25` (Should baseline) |
-| Summary | extractive top-K по cos-similarity (тот же e5-base, без LLM API) |
-| Persistence | stdlib `sqlite3`, WAL-режим |
-| Scheduler | asyncio-loop в `newscore daemon` |
-| Web | `fastapi` + `jinja2`, минимальный CSS |
+| BM25 | `rank_bm25` (baseline comparison) |
+| Summary | extractive top-K by cosine similarity (same e5-base, no LLM API) |
+| Persistence | stdlib `sqlite3`, WAL mode |
+| Scheduler | asyncio loop in `newscore daemon` |
+| Web | `fastapi` + `jinja2`, minimal CSS |
 | Tests | `pytest` + `respx` |
 
 ---
 
 ## Definition of Done
 
-**Step 0** (закрыт 2026-05-23) — capped precision @ min(K, |expected|) ≥ 0.5 на ≥4 из 6 непустых эталонных запросов. Embedding 0.89 avg, BM25 0.47 avg. См. `raw/step0-qual-baseline.md`.
+**Step 0** (closed 2026-05-23) — capped precision @ min(K, |expected|) ≥ 0.5 on ≥4 of 6
+non-empty reference queries. Embedding scored 0.89 avg, BM25 0.47 avg. See
+`raw/step0-qual-baseline.md`.
 
-**Step 1** — тема создаётся → daemon видит её as due → запускает Step 0 → дельтит с предыдущим run → сохраняет в SQLite.
+**Step 1** — a theme is created → the daemon sees it's due → runs Step 0 → diffs
+against the previous run → saves to SQLite.
 
-**Step 2** — в браузере: создать тему через форму, увидеть последний брифинг, запустить вручную, поставить на паузу.
+**Step 2** — in the browser: create a theme via a form, see the latest briefing, run
+it manually, pause it.
 
-**Step 3** — каждая статья в брифинге имеет `summary` 2–3 предложения, отбираемых по близости к query.
+**Step 3** — every article in a briefing has a 2–3 sentence `summary`, picked by
+closeness to the query.
