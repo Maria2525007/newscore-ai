@@ -8,7 +8,8 @@
 > were built for the ITMO defense (2026-05-29) and aren't under active development
 > right now.
 
-My part: product spec, user research (custdev), and the pitch/presentation site — see
+My part: product spec, user research (custdev), part of the backend/CLI implementation,
+and the pitch/presentation site — see
 [startup-project](https://github.com/Maria2525007/startup-project).
 
 ---
